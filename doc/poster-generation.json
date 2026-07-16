@@ -1,0 +1,18 @@
+{
+  "endpoint": "https://chat.aiwaves.tech/aigram/api/gen-image",
+  "origin": "https://aigram.app",
+  "generated_at": "2026-07-16T20:37:05.390455+00:00",
+  "file": "public/poster.png",
+  "candidate": "_artifacts/poster/poster-1784233999125.png",
+  "result_url": "https://cdn.aiwaves.tech/prod/telegram/avatar/0/1784233986379666.webp",
+  "ref_url": "https://cdn.aiwaves.tech/prod/telegram/avatar/0/1784228461881220.webp",
+  "attempt": 1,
+  "prompt": "Square 1024x1024 professional narrative key art poster for the mobile card battler ANOMALY HAND. Use the attached heroine only as identity reference: the same adult blonde field operative Isabel in an olive archive uniform, clear expressive eyes, confident focused face, three-quarter chest-up action pose. She stands at a black classified operations table and slams one luminous tactical card down toward a terrifying Signal Leech: an elongated ivory parasite mask with one red circular feeding eye, black segmented mantle and corrupted cyan transmission rings. The card impact tears the scene into fluorescent signal vermilion and acid cyan screenprint layers. Visual style: premium underground anomaly dossier, charcoal recycled paper, dense coarse halftone, distressed dry-ink gaps, asymmetric stencil cuts, clipped evidence photographs, bone-white technical circles, restrained brass micro-details, hard graphic shadows, authored editorial composition, dramatic conflict readable at 160x160 thumbnail size. Keep Isabel face and both eyes fully visible in the upper-middle area. Keep the enemy mask clearly visible opposite her. Place the exact large readable English title ANOMALY HAND fully inside a dark charcoal title band between 7 and 21 percent from the top. Leave at least 60 pixels of empty black margin above every letter and 45 pixels at both left and right; no letter may touch or cross an image edge. Use one centered line if it fits, otherwise two centered lines, heavy condensed bone-white block lettering with subtle vermilion and cyan registration offset. No other readable words, no logo, no watermark, no phone UI, no game screenshot, no card-grid interface, Strict four-color palette only: charcoal black, bone white, signal vermilion red and acid cyan, with tiny muted brass accents. Absolutely no purple, magenta, violet or blue-violet anywhere. No glassmorphism, no glossy 3D, no photorealism, no anime gacha framing. Keep the bottom 20 percent free of faces and essential objects because platform controls may cover it.",
+  "source_type": "Aigram transit raster generation with raster typographic finishing",
+  "finishing": {
+    "type": "raster color normalization and exact title typesetting",
+    "font": "Ostrich Sans Heavy",
+    "title_safe_area": "top 22%",
+    "thumbnail": "_artifacts/poster/poster-160.png"
+  }
+}

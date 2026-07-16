@@ -1,0 +1,1999 @@
+@font-face {
+  font-family: "AH Onest";
+  src: url("../fonts/onest-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AH Mono";
+  src: url("../fonts/JetBrainsMono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AH CJK";
+  src: url("../fonts/NotoSansSC-AH.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AH Archive";
+  src: url("../fonts/OstrichSans-AH.otf") format("opentype");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@ink: #090b0c;
+@black: #101315;
+@carbon: #191d1f;
+@paper: #e7deca;
+@chalk: #f4efe3;
+@dust: #a49d91;
+@red: #f04b35;
+@cyan: #19c9c3;
+@brass: #b99a58;
+@mint: #76b79d;
+@font-body: "AH Onest", "AH CJK", "PingFang SC", "Microsoft YaHei", sans-serif;
+@font-display: "AH Archive", "AH CJK", "Arial Narrow", sans-serif;
+@font-number: "AH Archive", "AH Mono", monospace;
+
+.ah-display-type() {
+  font-family: @font-display;
+  font-weight: 800;
+  font-synthesis: none;
+}
+
+.ah-number-type() {
+  font-family: @font-number;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-synthesis: none;
+}
+
+.ah-number-accent() {
+  .ah-number-type();
+  text-shadow:
+    1px 0 0 fade(@cyan, 72%),
+    -1px 0 0 fade(@red, 62%);
+}
+
+.ah-shell {
+  width: 100%;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -12%, fade(@cyan, 8%), transparent 35%),
+    #080a0b;
+}
+
+.ah {
+  position: relative;
+  width: min(100%, 520px);
+  height: 100dvh;
+  max-height: 940px;
+  overflow: hidden;
+  isolation: isolate;
+  color: @chalk;
+  background:
+    linear-gradient(90deg, transparent 20px, fade(@paper, 6%) 21px, transparent 22px),
+    linear-gradient(180deg, fade(@paper, 3%), transparent 30%),
+    @black;
+  font-family: @font-body;
+  font-kerning: normal;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    z-index: -1;
+    pointer-events: none;
+    border: 1px solid fade(@paper, 5%);
+    clip-path: polygon(0 0, 94% 0, 100% 4%, 100% 100%, 5% 100%, 0 96%);
+  }
+
+  button {
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  &__grain {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.44;
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 3px, fade(@paper, 2%) 4px),
+      radial-gradient(circle at 16% 25%, fade(@paper, 10%) 0 0.65px, transparent 0.8px),
+      radial-gradient(circle at 73% 66%, fade(@red, 9%) 0 0.6px, transparent 0.78px);
+    background-size: auto, 7px 9px, 11px 13px;
+    mix-blend-mode: screen;
+  }
+
+  &.is-impact-signature::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    pointer-events: none;
+    background:
+      linear-gradient(100deg, transparent 8%, fade(@cyan, 22%) 43%, fade(@paper, 17%) 50%, fade(@red, 22%) 57%, transparent 92%);
+    animation: ah-signature-scan 680ms cubic-bezier(.18, .78, .18, 1) both;
+  }
+
+  &.is-muted .ah-battle__tools button:last-child {
+    color: @red;
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 25px;
+      height: 2px;
+      background: currentColor;
+      transform: rotate(-42deg);
+    }
+  }
+}
+
+.ah h1,
+.ah h2,
+.ah-feature-card__copy h2,
+.ah-intent strong,
+.ah-stage__enemy-label strong,
+.ah-stage__hero-label strong,
+.ah-card > strong,
+.ah-reward-card > strong {
+  .ah-display-type();
+}
+
+html[lang="en"] .ah h1,
+html[lang="en"] .ah h2,
+html[lang="en"] .ah-feature-card__copy h2,
+html[lang="en"] .ah-intent strong,
+html[lang="en"] .ah-card > strong,
+html[lang="en"] .ah-reward-card > strong {
+  letter-spacing: .035em;
+}
+
+html[lang="zh-CN"] .ah h1,
+html[lang="zh-CN"] .ah h2,
+html[lang="zh-CN"] .ah-feature-card__copy h2,
+html[lang="zh-CN"] .ah-card > strong,
+html[lang="zh-CN"] .ah-reward-card > strong {
+  letter-spacing: -.045em;
+}
+
+.ah-kicker {
+  margin: 0;
+  color: @cyan;
+  font: 500 10px/1.2 "AH Mono", monospace;
+  letter-spacing: 0.14em;
+}
+
+.ah-button {
+  position: relative;
+  min-height: 48px;
+  border: 1px solid fade(@paper, 42%);
+  border-radius: 1px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  background: fade(@carbon, 88%);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 fade(#000, 52%);
+  transition: transform 70ms ease, box-shadow 70ms ease, background 150ms ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 17px;
+    height: 17px;
+    background: linear-gradient(135deg, transparent 48%, @black 50%);
+  }
+
+  &:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid @paper;
+    outline-offset: 2px;
+  }
+
+  &--primary {
+    border-color: @paper;
+    background: @paper;
+    color: @ink !important;
+    box-shadow: 4px 4px 0 fade(@red, 80%);
+
+    &::before {
+      content: "";
+      width: 5px;
+      align-self: stretch;
+      margin-left: -18px;
+      background: @red;
+    }
+  }
+}
+
+.ah-hero-art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(145deg, fade(@red, 24%) 0 14%, transparent 14% 67%, fade(@cyan, 15%) 67%),
+    radial-gradient(circle at 52% 38%, fade(@paper, 11%), transparent 44%),
+    repeating-linear-gradient(0deg, transparent 0 5px, fade(@paper, 4%) 6px),
+    @carbon;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8% -8% 22% 17%;
+    z-index: 0;
+    border: 1px solid fade(@paper, 18%);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 18px fade(@cyan, 4%),
+      0 0 0 37px fade(@red, 3%);
+  }
+
+  &__print {
+    position: absolute;
+    inset: 5% 4% 11%;
+    z-index: 0;
+    border: 1px solid fade(@cyan, 54%);
+    clip-path: polygon(10% 0, 100% 0, 100% 88%, 89% 100%, 0 100%, 0 9%);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      border: 1px solid;
+      transform: rotate(45deg);
+    }
+
+    &::before {
+      top: 7%;
+      right: 7%;
+      width: 19px;
+      height: 19px;
+      border-color: fade(@red, 88%);
+    }
+
+    &::after {
+      left: 7%;
+      bottom: 12%;
+      width: 11px;
+      height: 11px;
+      border-color: fade(@cyan, 86%);
+    }
+  }
+
+  img {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: 4%;
+    width: 108%;
+    height: 105%;
+    object-fit: contain;
+    object-position: center bottom;
+    transform: translateX(-50%);
+    filter: saturate(.96) contrast(1.05);
+    pointer-events: none;
+  }
+
+  &__frame {
+    position: absolute;
+    inset: 4px;
+    z-index: 3;
+    pointer-events: none;
+    border: 1px solid fade(@paper, 62%);
+    clip-path: polygon(11% 0, 100% 0, 100% 87%, 87% 100%, 0 100%, 0 9%);
+    box-shadow:
+      inset 3px 0 0 fade(@red, 88%),
+      inset -3px 0 0 fade(@cyan, 72%);
+  }
+
+  &__icons {
+    position: absolute;
+    z-index: 4;
+    left: 13%;
+    right: 13%;
+    bottom: 3.6%;
+    height: 8%;
+    min-height: 10px;
+    border: 1px solid fade(@paper, 62%);
+    background:
+      linear-gradient(90deg, @red 0 17%, transparent 17% 31%, @cyan 31% 48%, transparent 48% 63%, @red 63% 76%, transparent 76%),
+      @ink;
+    opacity: .82;
+  }
+}
+
+/* Selection — one hero is treated as a collectible, the rest as an archive index. */
+.ah-select {
+  height: 100%;
+  padding:
+    max(17px, env(safe-area-inset-top))
+    16px
+    max(13px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto 92px auto;
+  gap: 9px;
+
+  &__header {
+    h1 {
+      margin: 5px 0 3px;
+      font-size: clamp(30px, 9.4vw, 47px);
+      line-height: .92;
+      font-weight: 900;
+      letter-spacing: -.065em;
+    }
+
+    > p:last-child {
+      margin: 8px 0 0;
+      color: @dust;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+  }
+
+  &__eyebrow,
+  &__archive-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__eyebrow small,
+  &__archive-label small {
+    overflow: hidden;
+    color: fade(@paper, 48%);
+    font: 500 8px/1.2 "AH Mono", monospace;
+    letter-spacing: .08em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__showcase {
+    min-height: 0;
+    display: grid;
+    place-items: stretch;
+  }
+
+  &__archive-label {
+    min-height: 15px;
+    color: @paper;
+    font: 500 9px/1 "AH Mono", monospace;
+    letter-spacing: .12em;
+
+    &::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      order: 1;
+      background: fade(@paper, 16%);
+    }
+
+    span {
+      order: 0;
+    }
+
+    small {
+      order: 2;
+    }
+  }
+
+  &__footer {
+    display: grid;
+    grid-template-columns: 106px 1fr;
+    gap: 10px;
+  }
+}
+
+.ah-feature-card {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid fade(@paper, 58%);
+  background: @carbon;
+  box-shadow:
+    5px 5px 0 fade(@red, 58%),
+    -2px 2px 0 fade(@cyan, 36%);
+  clip-path: polygon(8% 0, 100% 0, 100% 89%, 93% 100%, 0 100%, 0 7%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, transparent 37%, fade(@ink, 22%) 52%, fade(@ink, 97%) 77%),
+      linear-gradient(112deg, fade(@red, 13%), transparent 30% 76%, fade(@cyan, 9%));
+  }
+
+  &::after {
+    content: "A—H / CLASSIFIED";
+    position: absolute;
+    z-index: 7;
+    top: 14px;
+    left: 15px;
+    padding: 4px 6px;
+    border-left: 3px solid @red;
+    background: fade(@ink, 72%);
+    color: @paper;
+    font: 500 8px/1 "AH Mono", monospace;
+    letter-spacing: .1em;
+  }
+
+  &__art {
+    position: absolute;
+    inset: 0;
+
+    .ah-hero-art__icons {
+      display: none;
+    }
+  }
+
+  &__serial {
+    position: absolute;
+    z-index: 7;
+    top: 12px;
+    right: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    color: @cyan;
+    .ah-number-accent();
+    letter-spacing: .035em;
+
+    span {
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    i {
+      color: @dust;
+      font-style: normal;
+      font-size: 9px;
+    }
+  }
+
+  &__copy {
+    position: absolute;
+    z-index: 6;
+    inset: auto 16px 14px;
+
+    > small {
+      color: @cyan;
+      font: 500 8px/1.2 "AH Mono", monospace;
+      letter-spacing: .1em;
+    }
+
+    h2 {
+      margin: 3px 0 8px;
+      font-size: clamp(27px, 8vw, 40px);
+      line-height: .92;
+      letter-spacing: -.055em;
+    }
+  }
+
+  &__abilities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    p {
+      min-width: 0;
+      margin: 0;
+      padding: 7px 8px;
+      border-top: 1px solid fade(@paper, 29%);
+      background: fade(@carbon, 68%);
+    }
+
+    b,
+    span {
+      display: block;
+    }
+
+    b {
+      margin-bottom: 3px;
+      color: @red;
+      font: 500 8px/1 "AH Mono", monospace;
+      letter-spacing: .09em;
+    }
+
+    p:last-child b {
+      color: @cyan;
+    }
+
+    span {
+      color: @paper;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+  }
+}
+
+.ah-roster {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 68px;
+  gap: 7px;
+  padding: 1px 2px 5px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.ah-roster-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid fade(@paper, 25%);
+  border-radius: 1px;
+  padding: 0;
+  background: @carbon;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 fade(#000, 56%);
+  text-align: left;
+  transition: transform 80ms ease, border-color 120ms ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: linear-gradient(180deg, transparent 42%, fade(@ink, 94%));
+    pointer-events: none;
+  }
+
+  &:active {
+    transform: translateY(2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid @paper;
+    outline-offset: 1px;
+  }
+
+  &.is-selected {
+    border: 2px solid @cyan;
+    box-shadow: 3px 3px 0 @red;
+
+    > span {
+      color: @cyan;
+    }
+  }
+
+  .ah-hero-art {
+    position: absolute;
+    inset: 0 0 18px;
+
+    &__frame {
+      inset: 2px;
+    }
+
+    &__icons,
+    &__print {
+      display: none;
+    }
+  }
+
+  > span {
+    position: absolute;
+    z-index: 5;
+    top: 4px;
+    right: 4px;
+    color: @paper;
+    .ah-number-type();
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: .04em;
+  }
+
+  > strong {
+    position: absolute;
+    z-index: 5;
+    inset: auto 4px 5px;
+    overflow: hidden;
+    font-size: 9px;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Battle — overlapping classified files rather than two generic panels. */
+.ah-battle {
+  height: 100%;
+  padding:
+    max(13px, env(safe-area-inset-top))
+    12px
+    max(9px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) 26px 17px auto;
+  gap: 5px;
+
+  &__header {
+    min-height: 51px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 2px 1px 8px;
+    border-bottom: 1px solid fade(@paper, 19%);
+
+    > div:first-child {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 7px;
+      align-items: baseline;
+
+      .ah-kicker {
+        grid-column: 1 / -1;
+      }
+
+      strong {
+        font-size: 18px;
+        line-height: 1.05;
+      }
+
+      small {
+        color: @dust;
+        font: 500 8px/1 "AH Mono", monospace;
+        letter-spacing: .06em;
+      }
+    }
+  }
+
+  &__tools {
+    display: flex;
+    gap: 4px;
+
+    button {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid fade(@paper, 28%);
+      border-radius: 1px;
+      background: fade(@carbon, 90%);
+      cursor: pointer;
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border: 1px solid fade(@paper, 8%);
+      }
+
+      &:active {
+        transform: translateY(2px);
+      }
+    }
+  }
+}
+
+.ah-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(fade(@ink, 42%), fade(@ink, 58%)),
+    url("./img/interface/battle-table.webp") center 46% / cover,
+    linear-gradient(146deg, transparent 0 55%, fade(@cyan, 7%) 55% 55.4%, transparent 55.4%),
+    repeating-linear-gradient(90deg, transparent 0 27px, fade(@paper, 3%) 28px),
+    fade(@ink, 18%);
+
+  &::before {
+    content: "CASE MATERIAL / ACTIVE";
+    position: absolute;
+    top: 44%;
+    left: 50%;
+    color: fade(@paper, 8%);
+    font: 500 21px/1 "AH Mono", monospace;
+    letter-spacing: .14em;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    white-space: nowrap;
+  }
+
+  &__enemy,
+  &__hero {
+    position: absolute;
+    min-width: 0;
+  }
+
+  &__enemy {
+    inset: 0 auto 10px 2px;
+    width: 62%;
+    display: grid;
+    grid-template-rows: auto 12px minmax(0, 1fr) auto;
+    gap: 4px;
+  }
+
+  &__hero {
+    right: 1px;
+    bottom: 2px;
+    z-index: 7;
+    width: 44%;
+    height: 76%;
+    display: grid;
+    grid-template-rows: 12px minmax(0, 1fr) auto auto auto;
+    gap: 3px;
+    filter: drop-shadow(-5px 5px 0 fade(#000, 58%));
+
+    &.is-hit {
+      animation: ah-player-hit 180ms steps(2, end);
+    }
+  }
+
+  &__file-label {
+    color: fade(@paper, 55%);
+    font: 500 7px/1 "AH Mono", monospace;
+    letter-spacing: .12em;
+    text-align: right;
+  }
+
+  &__enemy &__file-label {
+    text-align: left;
+  }
+
+  &__enemy-card,
+  &__hero-card {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid fade(@paper, 46%);
+    border-radius: 1px;
+    background: @carbon;
+    box-shadow: 4px 4px 0 fade(#000, 58%);
+    clip-path: polygon(9% 0, 100% 0, 100% 88%, 90% 100%, 0 100%, 0 8%);
+  }
+
+  &__hero-card {
+    border-color: fade(@cyan, 76%);
+    box-shadow:
+      4px 4px 0 fade(@red, 52%),
+      inset 0 0 0 1px fade(@paper, 25%);
+  }
+
+  &__enemy-label,
+  &__hero-label {
+    min-width: 0;
+    padding: 5px 6px;
+    background: fade(@ink, 94%);
+    border-left: 3px solid @red;
+
+    small,
+    strong {
+      display: block;
+    }
+
+    small {
+      color: @dust;
+      font: 500 7px/1 "AH Mono", monospace;
+      letter-spacing: .06em;
+    }
+
+    strong {
+      margin-top: 2px;
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__enemy-label {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 5;
+  }
+
+  &__hero-label {
+    border-left-color: @cyan;
+  }
+}
+
+.ah-intent {
+  min-height: 49px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid fade(@paper, 33%);
+  border-left: 5px solid @red;
+  background:
+    linear-gradient(90deg, fade(@red, 10%), transparent 62%),
+    fade(@carbon, 96%);
+  box-shadow: 3px 3px 0 fade(#000, 48%);
+
+  &__icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 1px solid currentColor;
+    color: @red;
+    transform: rotate(-2deg);
+  }
+
+  > span:last-child {
+    min-width: 0;
+    display: grid;
+  }
+
+  small {
+    color: @dust;
+    font: 500 7px/1.2 "AH Mono", monospace;
+  }
+
+  strong {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+
+  &--guard {
+    border-left-color: @mint;
+    background: linear-gradient(90deg, fade(@mint, 10%), transparent 62%), fade(@carbon, 96%);
+
+    .ah-intent__icon {
+      color: @mint;
+    }
+  }
+
+  &--charge {
+    border-left-color: @brass;
+    background: linear-gradient(90deg, fade(@brass, 10%), transparent 62%), fade(@carbon, 96%);
+
+    .ah-intent__icon {
+      color: @brass;
+    }
+  }
+}
+
+.ah-vital {
+  min-width: 0;
+
+  &__meta {
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    color: @chalk;
+    .ah-number-type();
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .035em;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+  }
+
+  &__block {
+    color: @mint;
+  }
+
+  &__track {
+    height: 7px;
+    padding: 1px;
+    border: 1px solid fade(@paper, 31%);
+    background: @ink;
+
+    span {
+      display: block;
+      height: 100%;
+      background: @cyan;
+      transition: width 180ms steps(6, end);
+    }
+  }
+
+  &--enemy &__track span {
+    background: @red;
+  }
+}
+
+.ah-status {
+  position: absolute;
+  right: 4px;
+  bottom: 18px;
+  z-index: 9;
+  padding: 4px 6px;
+  border: 1px solid @cyan;
+  background: @ink;
+  color: @cyan;
+  font: 500 8px/1 "AH Mono", monospace;
+  transform: rotate(-2deg);
+}
+
+.ah-sequence {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  color: @dust;
+
+  > span {
+    display: grid;
+    place-items: center;
+    margin-right: 2px;
+  }
+
+  i {
+    width: 11px;
+    height: 11px;
+    border: 1px solid fade(@paper, 42%);
+    border-radius: 50%;
+    transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+
+    &.is-on {
+      border-color: @cyan;
+      background: @cyan;
+      transform: translateX(-1px);
+      box-shadow: 2px 0 0 @red;
+    }
+  }
+}
+
+.ah-message {
+  align-self: center;
+  overflow: hidden;
+  color: @dust;
+  font-size: 11px;
+  line-height: 26px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-hand {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: fade(@paper, 56%);
+    font: 500 8px/1 "AH Mono", monospace;
+    letter-spacing: .09em;
+
+    i {
+      height: 1px;
+      flex: 1;
+      background: fade(@paper, 16%);
+    }
+  }
+
+  &__slot {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+
+    > span {
+      color: fade(@paper, 33%);
+      .ah-number-type();
+      font-size: 10px;
+      line-height: 1;
+      text-align: center;
+    }
+  }
+}
+
+.ah-card {
+  position: relative;
+  min-width: 0;
+  height: clamp(168px, 23vh, 205px);
+  overflow: hidden;
+  border: 1px solid fade(@paper, 47%);
+  border-radius: 1px;
+  padding: 12px 8px 9px;
+  display: grid;
+  grid-template-rows: 31px auto 1fr;
+  align-content: start;
+  background:
+    linear-gradient(180deg, fade(@ink, 8%), fade(@ink, 48%) 61%, fade(@ink, 96%) 100%),
+    url("./img/interface/battle-table.webp") 52% 42% / 265% auto,
+    radial-gradient(circle at 50% 34%, transparent 0 22%, fade(@paper, 7%) 22.4% 23%, transparent 23.4%),
+    linear-gradient(145deg, fade(@paper, 8%), transparent 31%),
+    repeating-linear-gradient(0deg, transparent 0 4px, fade(@paper, 4%) 5px),
+    @carbon;
+  box-shadow: 4px 4px 0 fade(#000, 60%);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 70ms ease, filter 130ms ease, box-shadow 70ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid fade(@paper, 13%);
+    clip-path: polygon(13% 0, 100% 0, 100% 88%, 86% 100%, 0 100%, 0 10%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 25px;
+    height: 25px;
+    background: linear-gradient(135deg, transparent 48%, @ink 50%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid @paper;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    filter: saturate(.25) contrast(.86);
+  }
+
+  &__registration {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 18px;
+    height: 18px;
+    border: 1px solid currentColor;
+    opacity: .54;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      background: currentColor;
+    }
+
+    &::before {
+      top: 8px;
+      left: -4px;
+      width: 24px;
+      height: 1px;
+    }
+
+    &::after {
+      top: -4px;
+      left: 8px;
+      width: 1px;
+      height: 24px;
+    }
+  }
+
+  &__kind {
+    width: 31px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    border: 1px solid currentColor;
+    background: fade(@ink, 40%);
+  }
+
+  > strong {
+    align-self: end;
+    margin-top: 8px;
+    font-size: clamp(14px, 4vw, 17px);
+    line-height: 1;
+  }
+
+  > b {
+    position: absolute;
+    top: 39px;
+    right: 8px;
+    .ah-number-accent();
+    font-size: clamp(27px, 8vw, 37px);
+    line-height: .82;
+    letter-spacing: .025em;
+    transform: skewX(-4deg);
+  }
+
+  &__desc {
+    align-self: end;
+    color: @dust;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  &--breach {
+    color: @red;
+    border-top: 3px solid @red;
+    background-position: center, 22% 36%, center, center, center, center;
+    background-blend-mode: normal, luminosity, normal, normal, normal, normal;
+
+    &::before {
+      box-shadow: inset 0 38px 0 fade(@red, 8%);
+    }
+  }
+
+  &--guard {
+    color: @mint;
+    border-top: 3px solid @mint;
+    background-position: center, 74% 45%, center, center, center, center;
+
+    &::before {
+      box-shadow: inset 0 38px 0 fade(@mint, 8%);
+    }
+  }
+
+  &--tech {
+    color: @cyan;
+    border-top: 3px solid @cyan;
+    background-position: center, 52% 67%, center, center, center, center;
+
+    &::before {
+      box-shadow: inset 0 38px 0 fade(@cyan, 9%);
+    }
+  }
+
+  &--signature {
+    color: @chalk;
+    border: 2px solid @cyan;
+    border-top: 4px solid @cyan;
+    background:
+      linear-gradient(112deg, fade(@cyan, 20%), transparent 38%, fade(@red, 16%)),
+      url("./img/interface/battle-table.webp") 48% 52% / 210% auto,
+      radial-gradient(circle at 50% 33%, transparent 0 21%, fade(@paper, 12%) 21.5% 22.5%, transparent 23%),
+      repeating-linear-gradient(0deg, transparent 0 4px, fade(@paper, 6%) 5px),
+      @carbon;
+    box-shadow: 5px 5px 0 @red;
+    animation: ah-signature-ready 900ms steps(2, end) infinite;
+  }
+}
+
+.ah-enemy-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    #15191b;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+    filter: saturate(.91) contrast(1.04);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, transparent 42%, fade(@ink, 24%) 62%, fade(@ink, 92%) 100%),
+      repeating-linear-gradient(0deg, transparent 0 5px, fade(@paper, 3%) 6px);
+  }
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    border: 1px solid fade(@cyan, 66%);
+    transform: rotate(45deg);
+  }
+
+  &::before {
+    top: 17%;
+    right: 11%;
+    width: 15px;
+    height: 15px;
+  }
+
+  &::after {
+    left: 8%;
+    bottom: 24%;
+    width: 25px;
+    height: 25px;
+    border-color: fade(@red, 63%);
+  }
+
+  &.is-hit {
+    animation: ah-enemy-hit 180ms steps(2, end);
+  }
+
+  &__halo {
+    position: absolute;
+    top: 11%;
+    left: 50%;
+    width: 61%;
+    aspect-ratio: 1;
+    border: 1px solid fade(@cyan, 48%);
+    border-radius: 50%;
+    transform: translateX(-50%);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border: 1px dashed fade(@paper, 28%);
+      border-radius: 50%;
+    }
+
+    &::after {
+      inset: 28%;
+      border-style: solid;
+      border-color: fade(@red, 55%);
+    }
+  }
+
+  &__mark {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &__mark {
+    z-index: 5;
+    top: 49%;
+    width: 11%;
+    aspect-ratio: 1;
+    border: 2px solid @red;
+    border-radius: 50%;
+    box-shadow: 4px 0 0 @cyan;
+    opacity: .84;
+  }
+}
+
+/* Reward and result keep the same print-world, with the active hero as provenance. */
+.ah-reward,
+.ah-result {
+  height: 100%;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    18px
+    max(18px, env(safe-area-inset-bottom));
+}
+
+.ah-reward {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 20px;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, fade(@ink, 18%), fade(@ink, 82%) 56%, fade(@ink, 98%)),
+      url("./img/interface/battle-table.webp") center / cover;
+    opacity: .32;
+    filter: saturate(.72) contrast(1.05);
+  }
+
+  &__hero {
+    position: absolute;
+    top: 1%;
+    right: -9%;
+    width: 58%;
+    height: 42%;
+    z-index: 1;
+    opacity: .62;
+    filter: saturate(.88) contrast(1.24) brightness(1.08);
+    mask-image: linear-gradient(180deg, #000 0 69%, transparent 100%);
+    pointer-events: none;
+
+    .ah-hero-art img {
+      left: 51%;
+      bottom: -19%;
+      width: 134%;
+      height: 126%;
+      object-position: center 9%;
+      filter: saturate(1.04) contrast(1.12) brightness(1.1);
+    }
+
+    .ah-hero-art::before,
+    .ah-hero-art__print {
+      opacity: .5;
+    }
+
+    .ah-hero-art__frame,
+    .ah-hero-art__icons {
+      display: none;
+    }
+  }
+
+  header {
+    position: relative;
+    z-index: 2;
+    padding-top: 15%;
+
+    h2 {
+      max-width: 85%;
+      margin: 7px 0 5px;
+      font-size: clamp(32px, 9vw, 46px);
+      line-height: .94;
+      letter-spacing: -.06em;
+    }
+
+    > p:last-child {
+      max-width: 75%;
+      margin: 0;
+      color: @dust;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+  }
+
+  &__list {
+    position: relative;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: end;
+    gap: 8px;
+  }
+}
+
+.ah-reward-card {
+  --reward-accent: @cyan;
+  position: relative;
+  min-width: 0;
+  height: clamp(285px, 40vh, 345px);
+  overflow: hidden;
+  border: 1px solid fade(@paper, 52%);
+  border-top: 4px solid var(--reward-accent);
+  border-radius: 1px;
+  padding: 10px 9px 12px;
+  display: grid;
+  grid-template-rows: auto 58px auto auto auto 1fr;
+  align-content: start;
+  gap: 6px;
+  background:
+    linear-gradient(180deg, fade(@ink, 8%), fade(@ink, 47%) 48%, fade(@ink, 95%) 100%),
+    url("./img/interface/battle-table.webp") 43% 50% / 250% auto,
+    @carbon;
+  box-shadow: 4px 4px 0 fade(#000, 66%);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 80ms ease, filter 160ms ease, box-shadow 80ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid fade(@paper, 18%);
+    clip-path: polygon(13% 0, 100% 0, 100% 89%, 84% 100%, 0 100%, 0 9%);
+    box-shadow: inset 0 58px 0 color-mix(in srgb, var(--reward-accent) 10%, transparent);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, transparent 48%, @ink 50%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid @paper;
+    outline-offset: 2px;
+  }
+
+  &:disabled:not(.is-selected) {
+    filter: saturate(.25) brightness(.62);
+  }
+
+  &--guard,
+  &--extraHeal {
+    --reward-accent: @mint;
+  }
+
+  &--breach {
+    --reward-accent: @red;
+  }
+
+  &--startSequence {
+    --reward-accent: @brass;
+  }
+
+  &--exposeBonus {
+    --reward-accent: @cyan;
+  }
+
+  &__top {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    color: var(--reward-accent);
+    font: 500 7px/1 "AH Mono", monospace;
+    letter-spacing: .08em;
+
+    i {
+      color: fade(@paper, 58%);
+      font-style: normal;
+    }
+  }
+
+  &__sigil {
+    position: relative;
+    z-index: 2;
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--reward-accent);
+    color: var(--reward-accent);
+    background: fade(@ink, 55%);
+    transform: rotate(-2deg);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border: 1px solid fade(@paper, 18%);
+      transform: rotate(45deg);
+    }
+
+    &::after {
+      inset: 18px;
+      border-color: var(--reward-accent);
+    }
+  }
+
+  &__type {
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+    color: var(--reward-accent);
+    font: 500 7px/1.2 "AH Mono", monospace;
+    letter-spacing: .07em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > b {
+    position: relative;
+    z-index: 2;
+    min-height: 42px;
+    color: @paper;
+    .ah-number-accent();
+    font-size: clamp(24px, 6.4vw, 32px);
+    line-height: .86;
+    letter-spacing: .02em;
+    transform: skewX(-4deg);
+    letter-spacing: -.06em;
+  }
+
+  > strong {
+    position: relative;
+    z-index: 2;
+    font-size: clamp(15px, 4.2vw, 19px);
+    line-height: 1.02;
+  }
+
+  &__desc {
+    position: relative;
+    z-index: 2;
+    align-self: end;
+    color: @dust;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  &__stamp {
+    position: absolute;
+    z-index: 8;
+    left: 50%;
+    bottom: 17%;
+    width: max-content;
+    max-width: 90%;
+    border: 3px double var(--reward-accent);
+    padding: 6px 8px;
+    background: @ink;
+    color: var(--reward-accent);
+    font: 500 9px/1 "AH Mono", monospace;
+    text-align: center;
+    opacity: 0;
+    transform: translate(-50%, 10px) rotate(-6deg) scale(.8);
+  }
+
+  &.is-selected {
+    border-color: var(--reward-accent);
+    box-shadow: 5px 5px 0 @red, -2px 0 0 @cyan;
+    filter: saturate(1.15) contrast(1.08);
+
+    .ah-reward-card__stamp {
+      opacity: 1;
+      animation: ah-reward-stamp 260ms cubic-bezier(.16, .82, .18, 1.16) both;
+    }
+  }
+}
+
+.ah-result {
+  display: grid;
+  grid-template-rows: auto minmax(220px, 1fr) auto auto auto auto;
+  align-content: center;
+  text-align: center;
+
+  &__hero {
+    position: relative;
+    width: min(76vw, 315px);
+    min-height: 250px;
+    margin: 12px auto 0;
+    overflow: hidden;
+    border: 1px solid fade(@paper, 48%);
+    box-shadow:
+      7px 7px 0 fade(@red, 56%),
+      -3px 3px 0 fade(@cyan, 34%);
+    clip-path: polygon(9% 0, 100% 0, 100% 89%, 90% 100%, 0 100%, 0 8%);
+  }
+
+  &__stamp {
+    position: relative;
+    z-index: 5;
+    width: max-content;
+    margin: -21px auto 0;
+    border: 3px double @cyan;
+    padding: 7px 14px;
+    background: @ink;
+    color: @cyan;
+    font: 500 14px/1 "AH Mono", monospace;
+    transform: rotate(-3deg);
+  }
+
+  h2 {
+    margin: 15px 0 2px;
+    font-size: clamp(32px, 9vw, 42px);
+    line-height: .94;
+    letter-spacing: -.055em;
+  }
+
+  > p:not(.ah-kicker) {
+    margin: 5px 0 12px;
+    color: @dust;
+    font-size: 13px;
+  }
+
+  dl {
+    margin: 0 0 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid fade(@paper, 26%);
+
+    div {
+      padding: 9px;
+
+      + div {
+        border-left: 1px solid fade(@paper, 26%);
+      }
+    }
+
+    dt {
+      color: @dust;
+      font-size: 10px;
+    }
+
+    dd {
+      margin: 2px 0 0;
+      .ah-number-accent();
+      font-size: 24px;
+      line-height: .9;
+      letter-spacing: .04em;
+    }
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  &--defeat &__stamp {
+    border-color: @red;
+    color: @red;
+  }
+}
+
+.ah-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: fade(@ink, 88%);
+
+  &__panel {
+    position: relative;
+    width: min(100%, 430px);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
+    border: 1px solid fade(@paper, 55%);
+    padding: 24px 18px 20px;
+    background:
+      linear-gradient(145deg, fade(@red, 11%), transparent 31% 76%, fade(@cyan, 8%)),
+      linear-gradient(fade(@carbon, 74%), fade(@carbon, 88%)),
+      url("./img/interface/battle-table.webp") center / cover,
+      repeating-linear-gradient(0deg, transparent 0 4px, fade(@paper, 4%) 5px),
+      @carbon;
+    box-shadow: 6px 6px 0 fade(@red, 58%);
+
+    h2 {
+      margin: 6px 0 17px;
+      font-size: 31px;
+      line-height: 1;
+    }
+
+    ol {
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 9px;
+      list-style: none;
+      counter-reset: protocol;
+    }
+
+    li {
+      counter-increment: protocol;
+      min-height: 70px;
+      padding: 10px 10px 10px 48px;
+      display: grid;
+      align-content: center;
+      border: 1px solid fade(@paper, 21%);
+      background: fade(@ink, 30%);
+
+      &::before {
+        content: "0" counter(protocol);
+        position: absolute;
+        margin-left: -38px;
+        color: @cyan;
+        .ah-number-accent();
+        font-size: 20px;
+        line-height: 1;
+        letter-spacing: .05em;
+      }
+
+      b {
+        font-size: 15px;
+      }
+
+      span {
+        margin-top: 3px;
+        color: @dust;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid fade(@paper, 25%);
+    background: @ink;
+    cursor: pointer;
+  }
+}
+
+@media (max-height: 680px) {
+  .ah-select {
+    grid-template-rows: auto minmax(0, 1fr) auto 74px auto;
+    gap: 6px;
+    padding-top: max(11px, env(safe-area-inset-top));
+
+    &__header {
+      h1 {
+        font-size: 32px;
+      }
+
+      > p:last-child {
+        margin-top: 5px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .ah-feature-card {
+    &__copy {
+      inset: auto 12px 10px;
+
+      h2 {
+        margin-bottom: 5px;
+        font-size: 25px;
+      }
+    }
+
+    &__abilities {
+      gap: 5px;
+
+      p {
+        padding: 5px 6px;
+      }
+
+      span {
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: 9px;
+        line-height: 1.22;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+    }
+  }
+
+  .ah-battle {
+    grid-template-rows: auto minmax(0, 1fr) 24px 15px auto;
+    padding: max(9px, env(safe-area-inset-top)) 2px max(7px, env(safe-area-inset-bottom));
+    gap: 3px;
+
+    &__header {
+      min-height: 48px;
+      padding-inline: 3px;
+    }
+  }
+
+  .ah-stage {
+    &__enemy {
+      width: 59%;
+    }
+
+    &__hero {
+      width: 43%;
+      height: 72%;
+    }
+  }
+
+  .ah-intent {
+    min-height: 45px;
+    padding: 4px 6px;
+
+    &__icon {
+      width: 31px;
+      height: 31px;
+    }
+  }
+
+  .ah-card {
+    height: 150px;
+    padding: 9px 6px 7px;
+
+    &__desc {
+      font-size: 9px;
+      line-height: 1.22;
+    }
+
+    > strong {
+      font-size: 13px;
+    }
+
+    > b {
+      top: 37px;
+      right: 6px;
+      font-size: 23px;
+    }
+  }
+
+  .ah-hand {
+    gap: 2px;
+  }
+
+  .ah-reward {
+    gap: 10px;
+
+    header {
+      padding-top: 4%;
+    }
+
+    &__hero {
+      top: 0;
+      right: -7%;
+      width: 54%;
+      height: 37%;
+
+      .ah-hero-art img {
+        bottom: -15%;
+        width: 128%;
+        height: 122%;
+      }
+    }
+
+    &__list {
+      gap: 4px;
+    }
+  }
+
+  .ah-reward-card {
+    height: 300px;
+    padding: 8px 6px 9px;
+    grid-template-rows: auto 46px auto auto auto 1fr;
+    gap: 4px;
+
+    &__sigil {
+      width: 46px;
+      height: 46px;
+
+      svg {
+        width: 25px;
+        height: 25px;
+      }
+    }
+
+    > b {
+      min-height: 34px;
+      font-size: 17px;
+    }
+
+    > strong {
+      font-size: 13px;
+    }
+
+    &__desc {
+      font-size: 9px;
+      line-height: 1.22;
+    }
+  }
+
+  .ah-result {
+    padding-top: max(12px, env(safe-area-inset-top));
+    grid-template-rows: auto minmax(160px, 1fr) auto auto auto auto;
+
+    &__hero {
+      min-height: 175px;
+      margin-top: 6px;
+    }
+
+    h2 {
+      margin-top: 10px;
+      font-size: 30px;
+    }
+  }
+}
+
+@media (min-width: 470px) {
+  .ah-select {
+    padding-inline: 24px;
+  }
+
+  .ah-roster {
+    grid-auto-columns: 76px;
+  }
+
+  .ah-battle {
+    padding-inline: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@keyframes ah-signature-scan {
+  0% {
+    opacity: 0;
+    transform: translateX(-55%);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(55%);
+  }
+}
+
+@keyframes ah-signature-ready {
+  0%,
+  100% {
+    box-shadow: 5px 5px 0 @red;
+  }
+  50% {
+    box-shadow: 3px 5px 0 @red, -2px 0 0 fade(@cyan, 62%);
+  }
+}
+
+@keyframes ah-enemy-hit {
+  0%,
+  100% {
+    transform: translateX(0);
+    filter: none;
+  }
+  40% {
+    transform: translateX(-4px);
+    filter: contrast(1.45) saturate(1.3);
+  }
+  70% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes ah-player-hit {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(4px);
+    filter: drop-shadow(-6px 0 0 fade(@red, 58%));
+  }
+}
+
+@keyframes ah-reward-stamp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) rotate(-6deg) scale(1.35);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(-6deg) scale(.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) rotate(-6deg) scale(1);
+  }
+}
