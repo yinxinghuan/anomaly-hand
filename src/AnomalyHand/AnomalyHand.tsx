@@ -203,13 +203,17 @@ export default function AnomalyHand() {
                 <strong>{t(game.enemy.nameKey)}</strong>
                 <small>{t(game.enemy.subtitleKey)}</small>
               </div>
+              <div className={`ah-turn-state ah-turn-state--${game.turnOwner}`} role="status" aria-live="polite">
+                <small>{t('game.turnState')}</small>
+                <strong>{t(game.turnOwner === 'enemy' ? 'game.enemyControl' : 'game.playerControl')}</strong>
+              </div>
               <div className="ah-battle__tools">
                 <button type="button" aria-label={t('game.viewRules')} onPointerDown={() => setRulesOpen(true)}><Icon name="rules" /></button>
                 <button type="button" aria-label={t(muted ? 'game.unmute' : 'game.mute')} onPointerDown={toggleMuted}><Icon name="sound" /></button>
               </div>
             </header>
 
-            <div className={`ah-stage ah-stage--${game.turnMotion}`}>
+            <div className={`ah-stage ah-stage--${game.turnMotion} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
               <div className="ah-performance" aria-live="polite">
                 <small>{t('game.score')}</small>
                 <strong>{game.score}</strong>
