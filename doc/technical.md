@@ -5,7 +5,7 @@
 - React 18 + TypeScript 5 构建界面与回合状态。
 - Less 负责响应式布局、位图裁切/遮罩、卡牌视觉和动效。
 - Vite 5 构建，`base: './'`，生产输出位于 `dist/`，资源路径可在任意部署子目录运行。
-- Web Audio API 合成选牌、命中、格挡、签名技和结算音效；首次用户操作后才创建 `AudioContext`。
+- Web Audio API 合成纸张、机械定位、命中、护盾、受伤、签名技、评级、发牌和结算多层音效；首次用户操作后才创建 `AudioContext`，压缩器限制峰值。
 - 8 位英雄各使用独立透明 WebP；人物由 Aigram transit raster 流程生成，卡框和套印系统由 CSS/SVG 绘制。
 - 3 位敌人与战斗档案底板使用独立 WebP；制作请求记录在 `_artifacts/interface/generation-log.json`。
 - 轻量 `i18n` 模块支持中文与英文，通过 `localStorage.game_locale` 覆盖或浏览器语言自动检测。
@@ -26,7 +26,8 @@ anomaly-hand/
 ├── src/
 │   ├── fonts/                   # Onest、JetBrains Mono 与中英展示字体子集
 │   ├── AnomalyHand/
-│   │   ├── img/heroes/cutouts/  # 8 位英雄独立透明 PNG/WebP
+│   │   ├── img/heroes/cutouts/  # 8 位英雄战备透明 WebP
+│   │   ├── img/heroes/states/   # 8 位英雄战损透明 WebP
 │   │   ├── img/interface/        # 敌方档案与共享战斗底板 WebP
 │   │   ├── i18n/index.ts        # zh/en 字典、语言检测与变量插值
 │   │   ├── AnomalyHand.tsx      # 所有屏幕与可访问交互
@@ -53,7 +54,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列，再延迟 430 毫秒执行敌方意图。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
+`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列，再延迟 430 毫秒执行敌方意图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段；`playerState` 在受到未格挡伤害时切换到角色战损图。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
 
 ### 卡牌与序列
 
@@ -85,7 +86,7 @@ anomaly-hand/
 
 ### 音频与输入
 
-`audio.ts` 延迟创建 Web Audio，并通过模块级静音标志阻止新音效。战斗牌、奖励和结果按钮使用 `onPointerDown`；可滚动英雄列表使用 `onClick`。键盘 `1/2/3` 可打牌，规则覆盖层支持 Escape 关闭。
+`audio.ts` 延迟创建 Web Audio，并通过模块级静音标志阻止新音效。振荡器、噪声缓冲、滤波器和总线压缩器组成纸张/机械/冲击的分层声响；常规牌、精准应对、签名技和结算拥有不同的音高、密度与低频强度。战斗牌、奖励和结果按钮使用 `onPointerDown`；可滚动英雄列表使用 `onClick`。键盘 `1/2/3` 可打牌，规则覆盖层支持 Escape 关闭。
 
 ### 多语言
 

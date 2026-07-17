@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Icon } from './icons'
 import { useAnomalyHand } from './useAnomalyHand'
 import { setSoundMuted } from './audio'
@@ -23,11 +23,11 @@ const REWARD_ICON: Record<RewardId, 'breach' | 'guard' | 'sequence' | 'health' |
   exposeBonus: 'tech',
 }
 
-function HeroArt({ hero, compact = false }: { hero: Hero; compact?: boolean }) {
+function HeroArt({ hero, compact = false, hurt = false }: { hero: Hero; compact?: boolean; hurt?: boolean }) {
   return (
-    <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
+    <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'} ${hurt ? 'is-hurt' : ''}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
       <span className="ah-hero-art__print" aria-hidden="true" />
-      <img src={hero.image} alt="" draggable={false} />
+      <img src={hurt ? hero.hurtImage : hero.image} alt="" draggable={false} />
       <span className="ah-hero-art__frame" aria-hidden="true" />
       <span className="ah-hero-art__icons" aria-hidden="true" />
     </div>
@@ -69,11 +69,11 @@ function IntentBadge({ intent }: { intent: Intent }) {
   )
 }
 
-function Card({ card, disabled, onPlay }: { card: ActionCard; disabled: boolean; onPlay: () => void }) {
+function Card({ card, disabled, motion, onPlay }: { card: ActionCard; disabled: boolean; motion: 'idle' | 'commit' | 'impact' | 'discard'; onPlay: () => void }) {
   return (
     <button
       type="button"
-      className={`ah-card ah-card--${card.kind}`}
+      className={`ah-card ah-card--${card.kind} ${motion !== 'idle' ? `is-${motion}` : ''}`}
       disabled={disabled}
       onPointerDown={onPlay}
     >
@@ -186,7 +186,7 @@ export default function AnomalyHand() {
         )}
 
         {game.phase === 'battle' && (
-          <section className="ah-battle">
+          <section className="ah-battle ah-screen-enter">
             <header className="ah-battle__header">
               <div>
                 <p className="ah-kicker">{t('game.encounter', { n: game.encounterIndex + 1 })}</p>
@@ -199,7 +199,21 @@ export default function AnomalyHand() {
               </div>
             </header>
 
-            <div className="ah-stage">
+            <div className={`ah-stage ah-stage--${game.turnMotion}`}>
+              <div className="ah-performance" aria-live="polite">
+                <small>{t('game.score')}</small>
+                <strong>{game.score}</strong>
+                {game.streak > 1 && <b>{t('game.streak', { n: game.streak })}</b>}
+              </div>
+              {game.feedback && (
+                <div className={`ah-combat-callout ah-combat-callout--${game.feedback.target} ah-combat-callout--${game.feedback.kind}`} key={game.feedback.id}>
+                  {game.feedback.rating && <strong>{game.feedback.rating}</strong>}
+                  <b>{t(game.feedback.labelKey)}</b>
+                  {game.feedback.scoreDelta != null && <small>+{game.feedback.scoreDelta}</small>}
+                  {game.feedback.value > 0 && <em>{game.feedback.kind === 'hurt' ? '−' : '+'}{game.feedback.value}</em>}
+                </div>
+              )}
+              <div className="ah-stage__impact-lines" aria-hidden="true"><i /><i /><i /><i /><i /></div>
               <div className="ah-stage__enemy">
                 <IntentBadge intent={game.intent} />
                 <span className="ah-stage__file-label">{t('game.enemyFile')}</span>
@@ -216,7 +230,7 @@ export default function AnomalyHand() {
 
               <div className={`ah-stage__hero ${game.impact === 'player' ? 'is-hit' : ''}`}>
                 <span className="ah-stage__file-label">{t('game.yourFile')}</span>
-                <div className="ah-stage__hero-card"><HeroArt hero={game.hero} /></div>
+                <div className="ah-stage__hero-card"><HeroArt hero={game.hero} hurt={game.playerState === 'hurt'} /></div>
                 <div className="ah-stage__hero-label">
                   <small>{game.hero.code}</small>
                   <strong>{game.hero.name}</strong>
@@ -234,8 +248,8 @@ export default function AnomalyHand() {
             <div className="ah-hand__label"><span>{t('game.handLabel')}</span><i aria-hidden="true" /></div>
             <div className="ah-hand">
               {game.hand.map((card, index) => (
-                <div className="ah-hand__slot" key={`${card.id}-${index}`}>
-                  <Card card={card} disabled={game.busy} onPlay={() => game.playCard(card.id)} />
+                <div className={`ah-hand__slot ${game.playedCardId === card.id ? 'is-played' : game.playedCardId ? 'is-dismissed' : ''}`} style={{ '--ah-deal-index': index } as CSSProperties} key={`${game.handDealId}-${card.id}-${index}`}>
+                  <Card card={card} disabled={game.busy} motion={game.playedCardId === card.id ? game.turnMotion : 'idle'} onPlay={() => game.playCard(card.id)} />
                   <span>{index + 1}</span>
                 </div>
               ))}

@@ -12,6 +12,7 @@ export type Hero = {
   signatureNameKey: string
   signatureDescriptionKey: string
   image: string
+  hurtImage: string
 }
 
 export type ActionCard = {
@@ -50,4 +51,16 @@ export type Reward = {
   id: RewardId
   nameKey: string
   descriptionKey: string
+}
+
+export type Rating = 'S' | 'A' | 'B' | 'C'
+
+export type CombatFeedback = {
+  id: number
+  target: 'enemy' | 'player' | 'hero'
+  kind: 'damage' | 'block' | 'heal' | 'hurt' | 'perfect' | 'signature'
+  value: number
+  rating?: Rating
+  scoreDelta?: number
+  labelKey: string
 }

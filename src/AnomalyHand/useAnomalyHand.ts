@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BASE_CARDS, ENEMIES, HEROES, REWARDS } from './data'
 import { sound } from './audio'
 import { t } from './i18n'
-import type { ActionCard, CardKind, HeroId, Intent, Phase, RewardId, Upgrades } from './types'
+import type { ActionCard, CardKind, CombatFeedback, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
 
 const MAX_HP = 30
 const DEFAULT_UPGRADES: Upgrades = {
@@ -55,12 +55,20 @@ export function useAnomalyHand() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(t('message.select'))
   const [impact, setImpact] = useState<'enemy' | 'player' | 'signature' | null>(null)
+  const [playerState, setPlayerState] = useState<'ready' | 'hurt'>('ready')
+  const [playedCardId, setPlayedCardId] = useState<string | null>(null)
+  const [turnMotion, setTurnMotion] = useState<'idle' | 'commit' | 'impact' | 'discard'>('idle')
+  const [handDealId, setHandDealId] = useState(0)
+  const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [feedback, setFeedback] = useState<CombatFeedback | null>(null)
   const [upgrades, setUpgrades] = useState<Upgrades>(DEFAULT_UPGRADES)
   const [rewardOptions, setRewardOptions] = useState(() => sample(REWARDS, 3))
   const [selectedRewardId, setSelectedRewardId] = useState<RewardId | null>(null)
   const [totalTurns, setTotalTurns] = useState(0)
   const [signatureUses, setSignatureUses] = useState(0)
   const timers = useRef<number[]>([])
+  const feedbackId = useRef(0)
 
   const hero = useMemo(() => HEROES.find(item => item.id === heroId)!, [heroId])
   const enemy = ENEMIES[encounterIndex]
@@ -75,6 +83,19 @@ export function useAnomalyHand() {
   const later = useCallback((fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms)
     timers.current.push(id)
+  }, [])
+
+  const showFeedback = useCallback((next: Omit<CombatFeedback, 'id'>, duration = 760) => {
+    const id = feedbackId.current + 1
+    feedbackId.current = id
+    setFeedback({ ...next, id })
+    later(() => setFeedback(current => current?.id === id ? null : current), duration)
+  }, [later])
+
+  const dealHand = useCallback((nextSequence: number, id: HeroId) => {
+    setHand(makeHand(nextSequence, id))
+    setHandDealId(value => value + 1)
+    sound.deal()
   }, [])
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
@@ -102,15 +123,21 @@ export function useAnomalyHand() {
     setSmithFury(false)
     setIsabelRecoveryUsed(false)
     setGetuMomentum(false)
-    setHand(makeHand(startSequence, heroId))
+    dealHand(startSequence, heroId)
     setBusy(false)
     setUpgrades(DEFAULT_UPGRADES)
     setTotalTurns(0)
     setSignatureUses(0)
+    setScore(0)
+    setStreak(0)
+    setPlayerState('ready')
+    setPlayedCardId(null)
+    setTurnMotion('idle')
+    setFeedback(null)
     setSelectedRewardId(null)
     setMessage(t('message.readIntent'))
     sound.select()
-  }, [heroId])
+  }, [dealHand, heroId])
 
   const resolveEnemy = useCallback((
     nextPlayerBlock: number,
@@ -130,12 +157,17 @@ export function useAnomalyHand() {
         setCharged(false)
         if (damage > 0) {
           setImpact('player')
+          setPlayerState('hurt')
           setMessage(t('message.hurt', { n: damage }))
           sound.hurt()
+          showFeedback({ target: 'hero', kind: 'hurt', value: damage, labelKey: 'rating.breached' })
           if (heroId === 'smith') setSmithFury(true)
         } else {
           setMessage(t('message.blocked'))
-          sound.guard()
+          sound.guard(true)
+          setStreak(value => value + 1)
+          setScore(value => value + 90)
+          showFeedback({ target: 'hero', kind: 'perfect', value: 0, rating: 'A', scoreDelta: 90, labelKey: 'rating.held' })
         }
       } else if (intent.kind === 'guard') {
         setEnemyBlock(value => value + intent.value)
@@ -169,15 +201,18 @@ export function useAnomalyHand() {
       later(() => {
         setImpact(null)
         setIntentStep(value => value + 1)
-        setHand(makeHand(nextSequence, heroId))
+        dealHand(nextSequence, heroId)
+        setPlayedCardId(null)
+        setTurnMotion('idle')
         setBusy(false)
         setMessage(t('message.nextIntent'))
       }, 360)
     }, 430)
-  }, [heroId, intent, later])
+  }, [dealHand, heroId, intent, later, showFeedback])
 
   const finishEncounter = useCallback(() => {
     setImpact(null)
+    setTurnMotion('discard')
     if (encounterIndex === ENEMIES.length - 1) {
       setPhase('victory')
       setBusy(false)
@@ -185,6 +220,7 @@ export function useAnomalyHand() {
       return
     }
     setPlayerHp(value => Math.min(MAX_HP, value + 6 + upgrades.extraHeal))
+    setPlayerState('ready')
     setRewardOptions(sample(REWARDS, 3))
     setSelectedRewardId(null)
     setPhase('reward')
@@ -198,7 +234,9 @@ export function useAnomalyHand() {
 
     setBusy(true)
     setTotalTurns(value => value + 1)
-    sound.card()
+    setPlayedCardId(card.id)
+    setTurnMotion('commit')
+    sound.card(card.kind)
 
     let damage = 0
     let block = playerBlock
@@ -319,13 +357,61 @@ export function useAnomalyHand() {
     if (nextSequence === 3 && sequence < 3) sound.ready()
     setSequence(nextSequence)
 
+    const usedExposure = damage > 0 && exposed > 0
+    let rating: Rating = 'B'
+    let labelKey = 'rating.clean'
+    let baseScore = 100
+    if (card.kind === 'signature') {
+      rating = 'S'
+      labelKey = 'rating.signature'
+      baseScore = 360
+    } else if (nextEnemyHp <= 0) {
+      rating = 'S'
+      labelKey = 'rating.finished'
+      baseScore = 320
+    } else if (card.id === 'counter' && intent.kind === 'attack') {
+      rating = 'A'
+      labelKey = 'rating.read'
+      baseScore = 220
+    } else if (usedExposure) {
+      rating = 'A'
+      labelKey = 'rating.exploit'
+      baseScore = 200
+    } else if (damage >= 10) {
+      rating = 'A'
+      labelKey = 'rating.heavy'
+      baseScore = 170
+    } else if (nextSequence > sequence) {
+      rating = 'A'
+      labelKey = 'rating.flow'
+      baseScore = 150
+    } else if (nextPlayerHp > playerHp) {
+      rating = 'B'
+      labelKey = 'rating.recovery'
+      baseScore = 110
+    } else if (damage === 0 && block === playerBlock) {
+      rating = 'C'
+      baseScore = 60
+    }
+    const nextStreak = rating === 'A' || rating === 'S' ? streak + 1 : rating === 'C' ? 0 : streak
+    const scoreDelta = Math.round(baseScore * (1 + Math.min(streak, 4) * 0.15))
+    setStreak(nextStreak)
+    setScore(value => value + scoreDelta)
+
+    later(() => {
+      setTurnMotion('impact')
+      if (damage > 0) setImpact(card.kind === 'signature' ? 'signature' : 'enemy')
+      const feedbackKind = card.kind === 'signature' ? 'signature' : damage > 0 ? 'damage' : nextPlayerHp > playerHp ? 'heal' : 'block'
+      showFeedback({ target: damage > 0 ? 'enemy' : 'hero', kind: feedbackKind, value: damage > 0 ? dealt : Math.max(0, block - playerBlock), rating, scoreDelta, labelKey })
+      if (damage > 0 && card.kind !== 'signature') sound.hit(rating)
+      if (damage === 0 && block > playerBlock) sound.guard(rating === 'A')
+      sound.score(rating)
+    }, 210)
+
     if (damage > 0) {
-      setImpact(card.kind === 'signature' ? 'signature' : 'enemy')
       setMessage(t('message.damage', { card: t(card.nameKey), n: dealt }))
-      if (card.kind !== 'signature') sound.hit()
     } else if (block > playerBlock) {
       setMessage(t('message.block', { card: t(card.nameKey), n: block - playerBlock }))
-      sound.guard()
     } else {
       setMessage(t('message.executed', { card: t(card.nameKey) }))
     }
@@ -344,7 +430,10 @@ export function useAnomalyHand() {
       return
     }
 
-    later(() => setImpact(null), card.kind === 'signature' ? 680 : 240)
+    later(() => {
+      setImpact(null)
+      setTurnMotion('discard')
+    }, card.kind === 'signature' ? 760 : 440)
     resolveEnemy(block, nextEnemyHp, nextSequence, nextPlayerHp)
   }, [
     busy,
@@ -366,7 +455,9 @@ export function useAnomalyHand() {
     playerHp,
     resolveEnemy,
     sequence,
+    showFeedback,
     smithFury,
+    streak,
     upgrades,
   ])
 
@@ -401,13 +492,13 @@ export function useAnomalyHand() {
       setSmithFury(false)
       setIsabelRecoveryUsed(false)
       setGetuMomentum(false)
-      setHand(makeHand(startSequence, heroId))
+      dealHand(startSequence, heroId)
       setMessage(t('message.newEncounter'))
       setPhase('battle')
       setBusy(false)
       setSelectedRewardId(null)
     }, 620)
-  }, [busy, encounterIndex, heroId, later, upgrades.startSequence])
+  }, [busy, dealHand, encounterIndex, heroId, later, upgrades.startSequence])
 
   const changeHero = useCallback(() => {
     timers.current.forEach(window.clearTimeout)
@@ -415,6 +506,10 @@ export function useAnomalyHand() {
     setPhase('select')
     setBusy(false)
     setImpact(null)
+    setPlayerState('ready')
+    setPlayedCardId(null)
+    setTurnMotion('idle')
+    setFeedback(null)
     setMessage(t('message.select'))
   }, [])
 
@@ -451,6 +546,13 @@ export function useAnomalyHand() {
     busy,
     message,
     impact,
+    playerState,
+    playedCardId,
+    turnMotion,
+    handDealId,
+    score,
+    streak,
+    feedback,
     rewardOptions,
     selectedRewardId,
     totalTurns,

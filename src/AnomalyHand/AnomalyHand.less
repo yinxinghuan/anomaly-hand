@@ -301,6 +301,21 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     pointer-events: none;
   }
 
+  &.is-hurt {
+    background:
+      linear-gradient(128deg, fade(@red, 32%), transparent 48%),
+      linear-gradient(145deg, fade(@red, 24%) 0 14%, transparent 14% 67%, fade(@cyan, 15%) 67%),
+      @carbon;
+
+    img {
+      width: 116%;
+      height: 111%;
+      bottom: 0;
+      filter: saturate(1.08) contrast(1.12);
+      animation: ah-hurt-portrait 440ms cubic-bezier(.13, .75, .2, 1) both;
+    }
+  }
+
   &__frame {
     position: absolute;
     inset: 4px;
@@ -731,6 +746,36 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     min-width: 0;
   }
 
+  &__impact-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    pointer-events: none;
+    opacity: 0;
+
+    i {
+      position: absolute;
+      top: 45%;
+      left: 52%;
+      width: 2px;
+      height: 1px;
+      background: @paper;
+      transform-origin: left center;
+    }
+
+    i:nth-child(1) { transform: rotate(-72deg); }
+    i:nth-child(2) { transform: rotate(-34deg); }
+    i:nth-child(3) { transform: rotate(7deg); }
+    i:nth-child(4) { transform: rotate(42deg); }
+    i:nth-child(5) { transform: rotate(76deg); }
+  }
+
+  &--impact &__impact-lines {
+    animation: ah-impact-lines 340ms cubic-bezier(.1, .7, .2, 1) both;
+
+    i { animation: ah-impact-ray 300ms cubic-bezier(.1, .8, .2, 1) both; }
+  }
+
   &__enemy {
     inset: 0 auto 10px 2px;
     width: 62%;
@@ -980,6 +1025,51 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   white-space: nowrap;
 }
 
+.ah-performance {
+  position: absolute;
+  z-index: 15;
+  top: 8px;
+  right: 8px;
+  min-width: 88px;
+  padding: 6px 7px 5px;
+  border: 1px solid fade(@paper, 44%);
+  border-right: 3px solid @cyan;
+  background: fade(@ink, 91%);
+  text-align: right;
+  clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%, 0 18%);
+
+  small,
+  b { display: block; font: 500 7px/1.1 "AH Mono", monospace; letter-spacing: .08em; }
+  small { color: @dust; }
+  strong { display: block; .ah-number-accent(); font-size: 28px; line-height: .8; }
+  b { margin-top: 4px; color: @mint; }
+}
+
+.ah-combat-callout {
+  position: absolute;
+  z-index: 20;
+  top: 40%;
+  left: 49%;
+  width: min(70%, 285px);
+  display: grid;
+  justify-items: center;
+  color: @chalk;
+  pointer-events: none;
+  text-align: center;
+  text-shadow: 2px 0 @red, -2px 0 @cyan;
+  animation: ah-callout 760ms cubic-bezier(.1, .78, .2, 1) both;
+
+  strong { .ah-number-accent(); font-size: clamp(47px, 14vw, 72px); line-height: .68; }
+  b { padding: 5px 7px 4px; background: @ink; border-block: 1px solid fade(@paper, 56%); font-size: clamp(11px, 3vw, 16px); line-height: 1; letter-spacing: .075em; }
+  small { margin-top: 4px; color: @mint; .ah-number-type(); font-size: 17px; }
+  em { margin-top: 3px; color: @red; .ah-number-accent(); font-size: 43px; line-height: .75; font-style: normal; }
+
+  &--hero { left: auto; right: 1%; }
+  &--hurt { color: @red; }
+  &--perfect { color: @mint; }
+  &--signature { color: @cyan; }
+}
+
 .ah-hand {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1012,6 +1102,12 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       line-height: 1;
       text-align: center;
     }
+
+    animation: ah-card-deal 360ms cubic-bezier(.18, .82, .2, 1) both;
+    animation-delay: calc(var(--ah-deal-index, 0) * 70ms);
+
+    &.is-dismissed { animation: ah-card-dismiss 190ms ease both; }
+    &.is-played { z-index: 10; }
   }
 }
 
@@ -1037,6 +1133,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   text-align: left;
   cursor: pointer;
   transition: transform 70ms ease, filter 130ms ease, box-shadow 70ms ease;
+  transform-style: preserve-3d;
+
+  &.is-commit { animation: ah-card-commit 210ms cubic-bezier(.16, .84, .22, 1) both; }
+  &.is-impact { animation: ah-card-impact 230ms cubic-bezier(.1, .78, .2, 1) both; }
+  &.is-discard { animation: ah-card-exit 220ms ease-in both; }
 
   &::before {
     content: "";
@@ -1996,4 +2097,56 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     opacity: 1;
     transform: translate(-50%, 0) rotate(-6deg) scale(1);
   }
+}
+
+@keyframes ah-card-deal {
+  0% { opacity: 0; transform: translateY(48px) rotateX(-32deg) rotateZ(-2deg); filter: brightness(1.55); }
+  65% { opacity: 1; transform: translateY(-4px) rotateX(5deg); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0); filter: none; }
+}
+
+@keyframes ah-card-commit {
+  0% { transform: translateY(0) rotateY(0deg) scale(1); }
+  28% { transform: translateY(-13px) rotateY(-10deg) scale(1.03); }
+  100% { transform: translate(-5vw, -27vh) rotateY(180deg) rotateZ(-7deg) scale(.78); opacity: .97; filter: brightness(1.38) contrast(1.2); }
+}
+
+@keyframes ah-card-impact {
+  0% { transform: translate(-5vw, -27vh) rotateY(180deg) rotateZ(-7deg) scale(.78); }
+  46% { transform: translate(-9vw, -30vh) rotateY(228deg) rotateZ(4deg) scale(1.02); filter: brightness(2) contrast(1.35); }
+  100% { transform: translate(-6vw, -28vh) rotateY(270deg) scale(.7); opacity: .12; }
+}
+
+@keyframes ah-card-exit {
+  to { transform: translateY(-34px) rotate(-8deg) scale(.62); opacity: 0; filter: blur(2px); }
+}
+
+@keyframes ah-card-dismiss {
+  to { opacity: .18; transform: translateY(12px) rotate(2deg) scale(.94); filter: saturate(.25); }
+}
+
+@keyframes ah-impact-lines {
+  0%, 100% { opacity: 0; }
+  22% { opacity: 1; background: fade(@red, 18%); }
+  48% { opacity: .75; background: transparent; }
+}
+
+@keyframes ah-impact-ray {
+  0% { opacity: 0; width: 2px; }
+  23% { opacity: 1; width: 18px; }
+  100% { opacity: 0; width: 170px; }
+}
+
+@keyframes ah-callout {
+  0% { opacity: 0; transform: translate(-50%, 32px) scale(.68) skewX(-9deg); }
+  16% { opacity: 1; transform: translate(-50%, -10px) scale(1.18) skewX(3deg); }
+  38% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -27px) scale(1.04); }
+}
+
+@keyframes ah-hurt-portrait {
+  0% { transform: translateX(-50%) translate(0, 0) scale(1); }
+  24% { transform: translateX(-50%) translate(6px, 2px) scale(1.04); }
+  48% { transform: translateX(-50%) translate(-4px, 0) scale(1.01); }
+  100% { transform: translateX(-50%) translate(0, 0) scale(1); }
 }
