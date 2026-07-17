@@ -154,6 +154,106 @@
   .ah-display-type();
 }
 
+.ah-chapter {
+  position: absolute;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px;
+  overflow: hidden;
+  pointer-events: none;
+  text-align: center;
+  background:
+    linear-gradient(90deg, fade(@ink, 98%), fade(@ink, 78%) 50%, fade(@ink, 98%)),
+    repeating-linear-gradient(0deg, transparent 0 7px, fade(@paper, 3%) 8px),
+    @ink;
+  animation: ah-chapter 860ms cubic-bezier(.16, .8, .18, 1) both;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 1px solid fade(@paper, 25%);
+    clip-path: polygon(4% 0, 100% 0, 100% 91%, 94% 100%, 0 100%, 0 8%);
+  }
+
+  &::after {
+    inset: 20% -30% auto;
+    height: 1px;
+    border: 0;
+    background: currentColor;
+    box-shadow: 0 19px 0 fade(@paper, 14%), 0 -19px 0 fade(@paper, 8%);
+    transform: rotate(-8deg);
+    opacity: .8;
+  }
+
+  p,
+  span,
+  b,
+  h2 { position: relative; z-index: 2; }
+
+  p {
+    margin: 0;
+    color: currentColor;
+    font: 500 10px/1 "AH Mono", monospace;
+    letter-spacing: .16em;
+  }
+
+  h2 {
+    max-width: 96%;
+    margin: 0;
+    .ah-display-type();
+    color: @chalk;
+    font-size: clamp(38px, 12vw, 70px);
+    line-height: .82;
+    letter-spacing: .04em;
+    text-shadow: 3px 0 0 fade(@cyan, 70%), -3px 0 0 fade(@red, 65%);
+  }
+
+  span {
+    max-width: 300px;
+    color: @paper;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  b {
+    margin-top: 8px;
+    padding: 5px 8px 4px;
+    border-block: 1px solid currentColor;
+    font: 500 8px/1 "AH Mono", monospace;
+    letter-spacing: .12em;
+  }
+
+  &__rail {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: .75;
+
+    i {
+      position: absolute;
+      left: -10%;
+      width: 120%;
+      height: 1px;
+      background: currentColor;
+      transform: rotate(-8deg);
+    }
+
+    i:nth-child(1) { top: 19%; }
+    i:nth-child(2) { top: 74%; }
+    i:nth-child(3) { top: 78%; background: fade(@paper, 18%); }
+  }
+
+  &--cyan { color: @cyan; }
+  &--red { color: @red; }
+  &--brass { color: @brass; }
+}
+
 html[lang="en"] .ah h1,
 html[lang="en"] .ah h2,
 html[lang="en"] .ah-feature-card__copy h2,
@@ -2149,4 +2249,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   24% { transform: translateX(-50%) translate(6px, 2px) scale(1.04); }
   48% { transform: translateX(-50%) translate(-4px, 0) scale(1.01); }
   100% { transform: translateX(-50%) translate(0, 0) scale(1); }
+}
+
+@keyframes ah-chapter {
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  13% { opacity: 1; clip-path: inset(0 0 0 0); }
+  72% { opacity: 1; clip-path: inset(0 0 0 0); }
+  100% { opacity: 0; clip-path: inset(100% 0 0 0); }
 }

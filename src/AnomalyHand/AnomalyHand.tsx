@@ -124,6 +124,16 @@ export default function AnomalyHand() {
       <div className={`ah ah--${game.phase} ${game.impact ? `is-impact-${game.impact}` : ''} ${muted ? 'is-muted' : ''}`}>
         <div className="ah__grain" aria-hidden="true" />
 
+        {game.chapter && (
+          <div className={`ah-chapter ah-chapter--${game.chapter.tone}`} key={game.chapter.id} role="status" aria-live="assertive">
+            <div className="ah-chapter__rail" aria-hidden="true"><i /><i /><i /></div>
+            <p>{game.chapter.kicker}</p>
+            <h2>{game.chapter.title}</h2>
+            <span>{game.chapter.detail}</span>
+            <b>{t(game.chapter.tone === 'red' ? 'chapter.hostileFile' : game.chapter.tone === 'brass' ? 'chapter.archiveTransition' : 'chapter.operationalControl')}</b>
+          </div>
+        )}
+
         {game.phase === 'select' && (
           <section className="ah-select">
             <header className="ah-select__header">

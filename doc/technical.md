@@ -54,7 +54,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列，再延迟 430 毫秒执行敌方意图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段；`playerState` 在受到未格挡伤害时切换到角色战损图。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
+`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`chapter` 在遭遇开始、你的回合、敌方回应、强化、胜利和失败时显示全屏章节牌，并在其可读时长结束后才开放下一步输入。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段；`playerState` 在受到未格挡伤害时切换到角色战损图。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
 
 ### 卡牌与序列
 
