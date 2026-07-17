@@ -185,7 +185,7 @@ export default function AnomalyHand() {
             </div>
 
             <footer className="ah-select__footer">
-              <button className="ah-button ah-button--secondary" type="button" onPointerDown={() => setRulesOpen(true)}>
+              <button className="ah-button ah-button--secondary" type="button" onClick={() => setRulesOpen(true)}>
                 <Icon name="rules" size={19} /> {t('game.rules')}
               </button>
               <button className="ah-button ah-button--primary" type="button" onPointerDown={game.startRun}>
@@ -205,15 +205,15 @@ export default function AnomalyHand() {
               </div>
               <div className={`ah-turn-state ah-turn-state--${game.turnOwner}`} role="status" aria-live="polite">
                 <small>{t('game.turnState')}</small>
-                <strong>{t(game.turnOwner === 'enemy' ? 'game.enemyControl' : 'game.playerControl')}</strong>
+                <strong>{t(game.turnOwner === 'enemy' ? 'game.enemyControl' : game.turnOwner === 'handoff' ? 'game.handoffControl' : 'game.playerControl')}</strong>
               </div>
               <div className="ah-battle__tools">
-                <button type="button" aria-label={t('game.viewRules')} onPointerDown={() => setRulesOpen(true)}><Icon name="rules" /></button>
-                <button type="button" aria-label={t(muted ? 'game.unmute' : 'game.mute')} onPointerDown={toggleMuted}><Icon name="sound" /></button>
+                <button type="button" aria-label={t('game.viewRules')} onClick={() => setRulesOpen(true)}><Icon name="rules" /></button>
+                <button type="button" aria-label={t(muted ? 'game.unmute' : 'game.mute')} onClick={toggleMuted}><Icon name="sound" /></button>
               </div>
             </header>
 
-            <div className={`ah-stage ah-stage--${game.turnMotion} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
+              <div className={`ah-stage ah-stage--${game.turnMotion} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
               <div className="ah-performance" aria-live="polite">
                 <small>{t('game.score')}</small>
                 <strong>{game.score}</strong>
@@ -228,6 +228,12 @@ export default function AnomalyHand() {
                 </div>
               )}
               <div className="ah-stage__impact-lines" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+              {game.enemyActing && (
+                <div className="ah-stage__enemy-turn" role="status">
+                  <Icon name={game.intent.kind} size={15} />
+                  <span>{t('game.hostileExecution')}</span>
+                </div>
+              )}
               <div className="ah-stage__enemy">
                 <IntentBadge intent={game.intent} />
                 <span className="ah-stage__file-label">{t('game.enemyFile')}</span>
@@ -239,7 +245,12 @@ export default function AnomalyHand() {
                   </div>
                 </div>
                 <VitalBar value={game.enemyHp} max={game.enemy.maxHp} block={game.enemyBlock} enemy />
-                {game.exposed > 0 && <span className="ah-status">{t('game.exposed', { n: game.exposed })}</span>}
+                {(game.exposed > 0 || game.charged) && (
+                  <div className="ah-stage__enemy-statuses">
+                    {game.exposed > 0 && <span className="ah-status">{t('game.exposed', { n: game.exposed })}</span>}
+                    {game.charged && <span className="ah-status ah-status--charged">{t('game.chargeLocked', { n: 5 })}</span>}
+                  </div>
+                )}
               </div>
 
               <div className={`ah-stage__hero ${game.impact === 'player' ? 'is-hit' : ''}`}>
@@ -327,7 +338,7 @@ export default function AnomalyHand() {
         {rulesOpen && (
           <div className="ah-modal" role="dialog" aria-modal="true" aria-labelledby="rules-title" onClick={() => setRulesOpen(false)}>
             <div className="ah-modal__panel" onClick={event => event.stopPropagation()}>
-              <button className="ah-modal__close" type="button" aria-label={t('game.closeRules')} onPointerDown={() => setRulesOpen(false)}>
+              <button className="ah-modal__close" type="button" aria-label={t('game.closeRules')} onClick={() => setRulesOpen(false)}>
                 <Icon name="close" />
               </button>
               <p className="ah-kicker">{t('game.quickProtocol')}</p>

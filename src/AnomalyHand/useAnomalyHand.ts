@@ -58,7 +58,7 @@ export function useAnomalyHand() {
   const [playerState, setPlayerState] = useState<'ready' | 'hurt'>('ready')
   const [playedCardId, setPlayedCardId] = useState<string | null>(null)
   const [turnMotion, setTurnMotion] = useState<'idle' | 'commit' | 'impact' | 'discard'>('idle')
-  const [turnOwner, setTurnOwner] = useState<'player' | 'enemy'>('player')
+  const [turnOwner, setTurnOwner] = useState<'player' | 'enemy' | 'handoff'>('player')
   const [enemyActing, setEnemyActing] = useState(false)
   const [handDealId, setHandDealId] = useState(0)
   const [score, setScore] = useState(0)
@@ -144,7 +144,7 @@ export function useAnomalyHand() {
     setPlayerState('ready')
     setPlayedCardId(null)
     setTurnMotion('idle')
-    setTurnOwner('player')
+    setTurnOwner('handoff')
     setEnemyActing(false)
     setFeedback(null)
     setSelectedRewardId(null)
@@ -156,7 +156,10 @@ export function useAnomalyHand() {
       detail: t('chapter.yourTurnDetail'),
       tone: 'cyan',
     })
-    later(() => setBusy(false), 860)
+    later(() => {
+      setTurnOwner('player')
+      setBusy(false)
+    }, 860)
   }, [dealHand, heroId, later, showChapter])
 
   const resolveEnemy = useCallback((
@@ -171,15 +174,18 @@ export function useAnomalyHand() {
       setBusy(true)
       setTurnMotion('discard')
       setTurnOwner('enemy')
-      setEnemyActing(true)
       showChapter({
         kicker: t('chapter.hostileTurn'),
         title: `${t(`intent.${intent.kind}`)} ${intent.value}`,
         detail: t('chapter.hostileDetail', { name: t(enemy.nameKey), intent: t(`intent.${intent.kind}`), n: intent.value }),
         tone: 'red',
-      }, 560)
+      }, 470)
       sound.select()
-    }, 330)
+    }, 250)
+
+    later(() => {
+      setEnemyActing(true)
+    }, 760)
 
     later(() => {
       let resultingHp = currentPlayerHp
@@ -250,7 +256,7 @@ export function useAnomalyHand() {
         dealHand(nextSequence, heroId)
         setPlayedCardId(null)
         setTurnMotion('idle')
-        setTurnOwner('player')
+        setTurnOwner('handoff')
         setMessage(t('message.nextIntent'))
         showChapter({
           kicker: t('game.encounter', { n: encounterIndex + 1 }),
@@ -258,9 +264,12 @@ export function useAnomalyHand() {
           detail: t('chapter.yourTurnDetail'),
           tone: 'cyan',
         }, 560)
-        later(() => setBusy(false), 560)
-      }, 340)
-    }, 930)
+        later(() => {
+          setTurnOwner('player')
+          setBusy(false)
+        }, 560)
+      }, 520)
+    }, 920)
   }, [dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, showChapter, showFeedback])
 
   const finishEncounter = useCallback(() => {
@@ -407,6 +416,7 @@ export function useAnomalyHand() {
     setEnemyBlock(nextEnemyBlock)
     setEnemyHp(nextEnemyHp)
     setPlayerHp(nextPlayerHp)
+    if (nextPlayerHp > playerHp) setPlayerState('ready')
     setPlayerBlock(block)
     setExposed(nextExposed)
     setCalibrated(nextCalibrated)
@@ -573,7 +583,7 @@ export function useAnomalyHand() {
       dealHand(startSequence, heroId)
       setMessage(t('message.newEncounter'))
       setPhase('battle')
-      setTurnOwner('player')
+      setTurnOwner('handoff')
       setEnemyActing(false)
       showChapter({
         kicker: t('game.encounter', { n: nextIndex + 1 }),
@@ -582,6 +592,7 @@ export function useAnomalyHand() {
         tone: 'cyan',
       }, 860)
       later(() => {
+        setTurnOwner('player')
         setBusy(false)
         setSelectedRewardId(null)
       }, 860)
@@ -631,6 +642,7 @@ export function useAnomalyHand() {
     enemyHp,
     enemyBlock,
     intent,
+    charged,
     exposed,
     sequence,
     hand,

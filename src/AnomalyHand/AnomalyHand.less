@@ -851,6 +851,13 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
     strong { color: @red; }
   }
+
+  &--handoff {
+    border-color: fade(@brass, 72%);
+    background: fade(@brass, 9%);
+
+    strong { color: @brass; }
+  }
 }
 
 .ah-stage {
@@ -913,23 +920,6 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &--enemy-action {
-    &::after {
-      content: "HOSTILE EXECUTION";
-      position: absolute;
-      z-index: 14;
-      top: 43%;
-      left: 50%;
-      padding: 4px 7px;
-      border-block: 1px solid fade(@red, 78%);
-      color: @paper;
-      background: fade(@ink, 76%);
-      font: 700 8px/1 "AH Mono", monospace;
-      letter-spacing: .14em;
-      transform: translate(-50%, -50%) rotate(-7deg);
-      animation: ah-enemy-warning 680ms steps(2, end) both;
-      white-space: nowrap;
-    }
-
     .ah-stage__enemy-card {
       border-color: @red;
       animation: ah-enemy-lunge 620ms cubic-bezier(.18, .82, .2, 1) both;
@@ -938,6 +928,27 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     .ah-intent {
       animation: ah-enemy-intent 420ms steps(2, end) infinite;
     }
+  }
+
+  &__enemy-turn {
+    position: absolute;
+    z-index: 14;
+    top: 43%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border-block: 1px solid fade(@red, 78%);
+    color: @paper;
+    background: fade(@ink, 80%);
+    font: 700 8px/1 "AH Mono", monospace;
+    letter-spacing: .14em;
+    transform: translate(-50%, -50%) rotate(-7deg);
+    animation: ah-enemy-warning 680ms steps(2, end) both;
+    white-space: nowrap;
+
+    svg { color: @red; }
   }
 
   &__enemy {
@@ -1137,16 +1148,28 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 }
 
 .ah-status {
-  position: absolute;
-  right: 4px;
-  bottom: 18px;
-  z-index: 9;
   padding: 4px 6px;
   border: 1px solid @cyan;
   background: @ink;
   color: @cyan;
   font: 500 8px/1 "AH Mono", monospace;
   transform: rotate(-2deg);
+
+  &--charged {
+    border-color: @brass;
+    color: @brass;
+    transform: rotate(2deg);
+  }
+}
+
+.ah-stage__enemy-statuses {
+  position: absolute;
+  right: 4px;
+  bottom: 18px;
+  z-index: 9;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
 }
 
 .ah-sequence {

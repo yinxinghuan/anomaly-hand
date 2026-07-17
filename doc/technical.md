@@ -54,7 +54,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`turnOwner` 是常驻的玩家/敌方控制权状态，`chapter` 在遭遇开始、你的回合、敌方回应、强化、胜利和失败时显示全屏章节牌，`enemyActing` 则让敌方回应阶段在战场中可见地前冲、闪烁和执行。敌人回应在出牌约 930 ms 后结算攻击、防护或蓄力，并在约 340 ms 后发牌、交还行动权；`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段；`playerState` 在受到未格挡伤害时切换到角色战损图。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
+`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`turnOwner` 区分 `enemy → handoff → player` 三种常驻控制权，避免卡牌尚不可点时错误显示玩家回合；`chapter` 负责大章节说明，`enemyActing` 则在章节退场后才让敌方在战场中可见地前冲、闪烁和执行。敌人回应在出牌约 920 ms 后结算攻击、防护或蓄力，并在约 520 ms 后开始发牌；章节收束后才开放输入。`charged` 同时驱动下一次攻击加值和“蓄力锁定 +5”状态标记；治疗令 `playerState` 回到正常角色图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
 
 ### 卡牌与序列
 
@@ -86,7 +86,7 @@ anomaly-hand/
 
 ### 音频与输入
 
-`audio.ts` 延迟创建 Web Audio，并通过模块级静音标志阻止新音效。振荡器、噪声缓冲、滤波器和总线压缩器组成纸张/机械/冲击的分层声响；常规牌、精准应对、签名技和结算拥有不同的音高、密度与低频强度。战斗牌、奖励和结果按钮使用 `onPointerDown`；可滚动英雄列表使用 `onClick`。键盘 `1/2/3` 可打牌，规则覆盖层支持 Escape 关闭。
+`audio.ts` 延迟创建 Web Audio，并通过模块级静音标志阻止新音效。振荡器、噪声缓冲、滤波器和总线压缩器组成纸张/机械/冲击的分层声响；常规牌、精准应对、签名技和结算拥有不同的音高、密度与低频强度。战斗牌、奖励和结果按钮使用 `onPointerDown`；菜单、规则与静音等工具控件使用 `onClick`，避免菜单在浏览器的按下态中失效；可滚动英雄列表使用 `onClick`。键盘 `1/2/3` 可打牌，规则覆盖层支持 Escape 关闭。
 
 ### 多语言
 
