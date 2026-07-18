@@ -5,6 +5,14 @@ import { t } from './i18n'
 import type { ActionCard, CardKind, CombatFeedback, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
 
 const MAX_HP = 30
+const CHAPTER_DURATION = {
+  intro: 1650,
+  turn: 1250,
+  hostile: 1350,
+  archive: 1650,
+  result: 1850,
+} as const
+const CHAPTER_EXIT_MS = 260
 const DEFAULT_UPGRADES: Upgrades = {
   breach: 0,
   guard: 0,
@@ -64,7 +72,7 @@ export function useAnomalyHand() {
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [feedback, setFeedback] = useState<CombatFeedback | null>(null)
-  const [chapter, setChapter] = useState<{ id: number; kicker: string; title: string; detail: string; tone: 'cyan' | 'red' | 'brass' } | null>(null)
+  const [chapter, setChapter] = useState<{ id: number; kicker: string; title: string; detail: string; tone: 'cyan' | 'red' | 'brass'; closing: boolean } | null>(null)
   const [upgrades, setUpgrades] = useState<Upgrades>(DEFAULT_UPGRADES)
   const [rewardOptions, setRewardOptions] = useState(() => sample(REWARDS, 3))
   const [selectedRewardId, setSelectedRewardId] = useState<RewardId | null>(null)
@@ -96,10 +104,11 @@ export function useAnomalyHand() {
     later(() => setFeedback(current => current?.id === id ? null : current), duration)
   }, [later])
 
-  const showChapter = useCallback((next: Omit<NonNullable<typeof chapter>, 'id'>, duration = 860) => {
+  const showChapter = useCallback((next: Omit<NonNullable<typeof chapter>, 'id' | 'closing'>, duration: number = CHAPTER_DURATION.turn) => {
     const id = chapterId.current + 1
     chapterId.current = id
-    setChapter({ ...next, id })
+    setChapter({ ...next, id, closing: false })
+    later(() => setChapter(current => current?.id === id ? { ...current, closing: true } : current), Math.max(0, duration - CHAPTER_EXIT_MS))
     later(() => setChapter(current => current?.id === id ? null : current), duration)
   }, [later])
 
@@ -155,11 +164,11 @@ export function useAnomalyHand() {
       title: t('chapter.yourTurn'),
       detail: t('chapter.yourTurnDetail'),
       tone: 'cyan',
-    })
+    }, CHAPTER_DURATION.intro)
     later(() => {
       setTurnOwner('player')
       setBusy(false)
-    }, 860)
+    }, CHAPTER_DURATION.intro)
   }, [dealHand, heroId, later, showChapter])
 
   const resolveEnemy = useCallback((
@@ -179,13 +188,13 @@ export function useAnomalyHand() {
         title: `${t(`intent.${intent.kind}`)} ${intent.value}`,
         detail: t('chapter.hostileDetail', { name: t(enemy.nameKey), intent: t(`intent.${intent.kind}`), n: intent.value }),
         tone: 'red',
-      }, 470)
+      }, CHAPTER_DURATION.hostile)
       sound.select()
-    }, 250)
+    }, 400)
 
     later(() => {
       setEnemyActing(true)
-    }, 760)
+    }, 400 + CHAPTER_DURATION.hostile + 60)
 
     later(() => {
       let resultingHp = currentPlayerHp
@@ -241,11 +250,11 @@ export function useAnomalyHand() {
           title: t('chapter.defeat'),
           detail: t('chapter.defeatDetail'),
           tone: 'red',
-        }, 1120)
+        }, CHAPTER_DURATION.result)
         later(() => {
           setPhase('defeat')
           setBusy(false)
-        }, 1120)
+        }, CHAPTER_DURATION.result)
         return
       }
 
@@ -263,13 +272,13 @@ export function useAnomalyHand() {
           title: t('chapter.yourTurn'),
           detail: t('chapter.yourTurnDetail'),
           tone: 'cyan',
-        }, 560)
+        }, CHAPTER_DURATION.turn)
         later(() => {
           setTurnOwner('player')
           setBusy(false)
-        }, 560)
-      }, 520)
-    }, 920)
+        }, CHAPTER_DURATION.turn)
+      }, 640)
+    }, 400 + CHAPTER_DURATION.hostile + 220)
   }, [dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, showChapter, showFeedback])
 
   const finishEncounter = useCallback(() => {
@@ -282,11 +291,11 @@ export function useAnomalyHand() {
         title: t('chapter.victory'),
         detail: t('chapter.victoryDetail'),
         tone: 'brass',
-      }, 1120)
+      }, CHAPTER_DURATION.result)
       later(() => {
         setPhase('victory')
         setBusy(false)
-      }, 1120)
+      }, CHAPTER_DURATION.result)
       return
     }
     setPlayerHp(value => Math.min(MAX_HP, value + 6 + upgrades.extraHeal))
@@ -298,11 +307,11 @@ export function useAnomalyHand() {
       title: t('chapter.fileSealed'),
       detail: t('chapter.fileSealedDetail'),
       tone: 'brass',
-    }, 940)
+    }, CHAPTER_DURATION.archive)
     later(() => {
       setPhase('reward')
       setBusy(false)
-    }, 940)
+    }, CHAPTER_DURATION.archive)
   }, [encounterIndex, later, showChapter, upgrades.extraHeal])
 
   const playCard = useCallback((cardId: string) => {
@@ -503,11 +512,11 @@ export function useAnomalyHand() {
           title: t('chapter.defeat'),
           detail: t('chapter.defeatDetail'),
           tone: 'red',
-        }, 1120)
+        }, CHAPTER_DURATION.result)
         later(() => {
           setPhase('defeat')
           setBusy(false)
-        }, 1120)
+        }, CHAPTER_DURATION.result)
       }, 420)
       return
     }
@@ -590,12 +599,12 @@ export function useAnomalyHand() {
         title: t('chapter.yourTurn'),
         detail: t('chapter.yourTurnDetail'),
         tone: 'cyan',
-      }, 860)
+      }, CHAPTER_DURATION.intro)
       later(() => {
         setTurnOwner('player')
         setBusy(false)
         setSelectedRewardId(null)
-      }, 860)
+      }, CHAPTER_DURATION.intro)
     }, 620)
   }, [busy, dealHand, encounterIndex, heroId, later, showChapter, upgrades.startSequence])
 

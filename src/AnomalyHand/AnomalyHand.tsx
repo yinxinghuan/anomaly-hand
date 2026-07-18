@@ -125,7 +125,7 @@ export default function AnomalyHand() {
         <div className="ah__grain" aria-hidden="true" />
 
         {game.chapter && (
-          <div className={`ah-chapter ah-chapter--${game.chapter.tone}`} key={game.chapter.id} role="status" aria-live="assertive">
+          <div className={`ah-chapter ah-chapter--${game.chapter.tone} ${game.chapter.closing ? 'is-closing' : ''}`} key={game.chapter.id} role="status" aria-live="assertive">
             <div className="ah-chapter__rail" aria-hidden="true"><i /><i /><i /></div>
             <p>{game.chapter.kicker}</p>
             <h2>{game.chapter.title}</h2>

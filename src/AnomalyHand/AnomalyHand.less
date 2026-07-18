@@ -170,7 +170,11 @@
     linear-gradient(90deg, fade(@ink, 98%), fade(@ink, 78%) 50%, fade(@ink, 98%)),
     repeating-linear-gradient(0deg, transparent 0 7px, fade(@paper, 3%) 8px),
     @ink;
-  animation: ah-chapter 860ms cubic-bezier(.16, .8, .18, 1) both;
+  animation: ah-chapter-in 240ms cubic-bezier(.16, .8, .18, 1) both;
+
+  &.is-closing {
+    animation: ah-chapter-out 260ms cubic-bezier(.5, 0, .84, .2) both;
+  }
 
   &::before,
   &::after {
@@ -2338,10 +2342,13 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   100% { transform: translateX(-50%) translate(0, 0) scale(1); }
 }
 
-@keyframes ah-chapter {
+@keyframes ah-chapter-in {
   0% { opacity: 0; clip-path: inset(0 0 100% 0); }
-  13% { opacity: 1; clip-path: inset(0 0 0 0); }
-  72% { opacity: 1; clip-path: inset(0 0 0 0); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes ah-chapter-out {
+  0% { opacity: 1; clip-path: inset(0 0 0 0); }
   100% { opacity: 0; clip-path: inset(100% 0 0 0); }
 }
 
