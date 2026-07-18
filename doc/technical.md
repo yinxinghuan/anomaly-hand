@@ -54,7 +54,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`turnOwner` 区分 `enemy → handoff → player` 三种常驻控制权，避免卡牌尚不可点时错误显示玩家回合；`chapter` 负责大章节说明，包含 `closing` 状态：它以 240 ms 进入、完整停留到指定时长、再用 260 ms 退出，修复了旧 CSS 固定 860 ms 动画会提前把长章节变透明的问题。`showFeedback` 和评语动效统一保持 1,350 ms；敌方章节从出牌后 1,650 ms 才启动，保证玩家结算结束后再切换。`enemyActing` 在敌方章节完整退场后才让敌方在战场中可见地前冲、闪烁和执行。敌人回应在出牌约 3,220 ms 后结算，并在约 640 ms 后开始发牌；玩家章节完整读完后才开放输入。`charged` 同时驱动下一次攻击加值和“蓄力锁定 +5”状态标记；治疗令 `playerState` 回到正常角色图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
+`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`turnOwner` 区分 `enemy → handoff → player` 三种常驻控制权；`battleEntry` 进一步区分 `briefing → enemy → hero → ready`。遭遇进入由 `beginEncounter()` 统一调度：先显示敌人识别标题，再依次触发敌方和行动员档案的飞入，最后展示“你的回合”并解锁输入。`playCard()` 与键盘 `1/2/3` 都要求 `battleEntry === 'ready'`，卡牌本身同时使用 `disabled` 和锁定容器，防止灰态仍能出牌。`chapter` 负责大章节说明，包含 `closing` 状态：它以 240 ms 进入、完整停留到指定时长、再用 260 ms 退出，修复了旧 CSS 固定 860 ms 动画会提前把长章节变透明的问题。`showFeedback` 和评语动效统一保持 1,350 ms；敌方章节从出牌后 1,650 ms 才启动，保证玩家结算结束后再切换。`enemyActing` 在敌方章节完整退场后才让敌方在战场中可见地前冲、闪烁和执行。敌人回应在出牌约 3,220 ms 后结算，并在约 640 ms 后开始发牌；玩家章节完整读完后才开放输入。`charged` 同时驱动下一次攻击加值和“蓄力锁定 +5”状态标记；治疗令 `playerState` 回到正常角色图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
 
 ### 卡牌与序列
 

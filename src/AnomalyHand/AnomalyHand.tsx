@@ -213,7 +213,7 @@ export default function AnomalyHand() {
               </div>
             </header>
 
-              <div className={`ah-stage ah-stage--${game.turnMotion} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
+              <div className={`ah-stage ah-stage--${game.turnMotion} ah-stage--entry-${game.battleEntry} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
               <div className="ah-performance" aria-live="polite">
                 <small>{t('game.score')}</small>
                 <strong>{game.score}</strong>
@@ -236,7 +236,7 @@ export default function AnomalyHand() {
               )}
               <div className="ah-stage__enemy">
                 <IntentBadge intent={game.intent} />
-                <span className="ah-stage__file-label">{t('game.enemyFile')}</span>
+                <span className="ah-stage__file-label"><b>{t('game.enemyRole')}</b>{t('game.enemyFile')}</span>
                 <div className="ah-stage__enemy-card">
                   <EnemyArt id={game.enemy.id} impact={game.impact} />
                   <div className="ah-stage__enemy-label">
@@ -254,7 +254,7 @@ export default function AnomalyHand() {
               </div>
 
               <div className={`ah-stage__hero ${game.impact === 'player' ? 'is-hit' : ''}`}>
-                <span className="ah-stage__file-label">{t('game.yourFile')}</span>
+                <span className="ah-stage__file-label"><b>{t('game.playerRole')}</b>{t('game.yourFile')}</span>
                 <div className="ah-stage__hero-card"><HeroArt hero={game.hero} hurt={game.playerState === 'hurt'} /></div>
                 <div className="ah-stage__hero-label">
                   <small>{game.hero.code}</small>
@@ -270,11 +270,13 @@ export default function AnomalyHand() {
 
             <div className="ah-message" role="status">{game.message}</div>
 
-            <div className="ah-hand__label"><span>{t('game.handLabel')}</span><i aria-hidden="true" /></div>
-            <div className="ah-hand">
+            <div className={`ah-hand__label ${game.battleEntry !== 'ready' ? 'is-locked' : ''}`}>
+              <span>{game.battleEntry === 'briefing' ? t('game.entryBriefing') : game.battleEntry === 'enemy' ? t('game.entryEnemy') : game.battleEntry === 'hero' ? t('game.entryHero') : t('game.handLabel')}</span><i aria-hidden="true" />
+            </div>
+            <div className={`ah-hand ${game.battleEntry !== 'ready' ? 'is-locked' : ''}`} aria-busy={game.battleEntry !== 'ready'}>
               {game.hand.map((card, index) => (
                 <div className={`ah-hand__slot ${game.playedCardId === card.id ? 'is-played' : game.playedCardId ? 'is-dismissed' : ''}`} style={{ '--ah-deal-index': index } as CSSProperties} key={`${game.handDealId}-${card.id}-${index}`}>
-                  <Card card={card} disabled={game.busy} motion={game.playedCardId === card.id ? game.turnMotion : 'idle'} onPlay={() => game.playCard(card.id)} />
+                  <Card card={card} disabled={game.busy || game.battleEntry !== 'ready'} motion={game.playedCardId === card.id ? game.turnMotion : 'idle'} onPlay={() => game.playCard(card.id)} />
                   <span>{index + 1}</span>
                 </div>
               ))}

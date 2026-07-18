@@ -218,6 +218,13 @@
     text-shadow: 3px 0 0 fade(@cyan, 70%), -3px 0 0 fade(@red, 65%);
   }
 
+  :root[lang="zh-CN"] & h2 {
+    max-width: 100%;
+    font-size: clamp(34px, 10vw, 56px);
+    letter-spacing: -.055em;
+    white-space: nowrap;
+  }
+
   span {
     max-width: 300px;
     color: @paper;
@@ -934,6 +941,31 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
   }
 
+  &--entry-briefing {
+    .ah-stage__enemy,
+    .ah-stage__hero {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  &--entry-enemy {
+    .ah-stage__enemy {
+      animation: ah-hostile-file-enter 760ms cubic-bezier(.12, .82, .16, 1) both;
+    }
+
+    .ah-stage__hero {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  &--entry-hero {
+    .ah-stage__hero {
+      animation: ah-operative-file-enter 780ms cubic-bezier(.12, .82, .16, 1) both;
+    }
+  }
+
   &__enemy-turn {
     position: absolute;
     z-index: 14;
@@ -984,10 +1016,17 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     font: 500 7px/1 "AH Mono", monospace;
     letter-spacing: .12em;
     text-align: right;
+
+    b {
+      color: @cyan;
+      font-weight: 700;
+    }
   }
 
   &__enemy &__file-label {
     text-align: left;
+
+    b { color: @red; }
   }
 
   &__enemy-card,
@@ -1266,6 +1305,17 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
 
+  &.is-locked {
+    pointer-events: none;
+
+    .ah-card {
+      opacity: .22;
+      filter: grayscale(1) brightness(.62);
+    }
+
+    .ah-hand__slot > span { opacity: .2; }
+  }
+
   &__label {
     display: flex;
     align-items: center;
@@ -1278,6 +1328,12 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       height: 1px;
       flex: 1;
       background: fade(@paper, 16%);
+    }
+
+    &.is-locked {
+      color: @brass;
+
+      i { background: fade(@brass, 38%); }
     }
   }
 
@@ -2365,4 +2421,18 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 @keyframes ah-enemy-intent {
   0%, 100% { box-shadow: 0 0 0 fade(@red, 0); }
   50% { box-shadow: 0 0 0 2px fade(@red, 74%), 0 0 18px fade(@red, 42%); }
+}
+
+@keyframes ah-hostile-file-enter {
+  0% { opacity: 0; transform: translate(-115%, -8%) rotate(-12deg) scale(.7); filter: brightness(1.7) saturate(0); }
+  54% { opacity: 1; transform: translate(7%, 1%) rotate(2deg) scale(1.055); filter: brightness(1.22) saturate(1.35); }
+  76% { transform: translate(-2%, 0) rotate(-1deg) scale(.99); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); filter: brightness(1) saturate(1); }
+}
+
+@keyframes ah-operative-file-enter {
+  0% { opacity: 0; transform: translate(118%, 12%) rotate(13deg) scale(.68); filter: brightness(1.8) saturate(0); }
+  54% { opacity: 1; transform: translate(-8%, -1%) rotate(-3deg) scale(1.06); filter: brightness(1.2) saturate(1.28); }
+  78% { transform: translate(2%, 0) rotate(1deg) scale(.99); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); filter: brightness(1) saturate(1); }
 }

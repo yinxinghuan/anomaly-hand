@@ -16,6 +16,12 @@ const CHAPTER_EXIT_MS = 260
 const COMBAT_FEEDBACK_DURATION = 1350
 const ENEMY_CHAPTER_DELAY = 1650
 const PLAYER_RESULT_HOLD = 1450
+const ENCOUNTER_ENTRY = {
+  enemyDeploy: CHAPTER_DURATION.intro + 80,
+  heroDeploy: CHAPTER_DURATION.intro + 900,
+  controlBrief: CHAPTER_DURATION.intro + 1800,
+  unlock: CHAPTER_DURATION.intro + 1800 + CHAPTER_DURATION.turn,
+} as const
 const DEFAULT_UPGRADES: Upgrades = {
   breach: 0,
   guard: 0,
@@ -70,6 +76,7 @@ export function useAnomalyHand() {
   const [playedCardId, setPlayedCardId] = useState<string | null>(null)
   const [turnMotion, setTurnMotion] = useState<'idle' | 'commit' | 'impact' | 'discard'>('idle')
   const [turnOwner, setTurnOwner] = useState<'player' | 'enemy' | 'handoff'>('player')
+  const [battleEntry, setBattleEntry] = useState<'briefing' | 'enemy' | 'hero' | 'ready'>('briefing')
   const [enemyActing, setEnemyActing] = useState(false)
   const [handDealId, setHandDealId] = useState(0)
   const [score, setScore] = useState(0)
@@ -121,6 +128,48 @@ export function useAnomalyHand() {
     sound.deal()
   }, [])
 
+  const beginEncounter = useCallback((nextEnemy: typeof ENEMIES[number], encounterNumber: number) => {
+    setBattleEntry('briefing')
+    setBusy(true)
+    setTurnOwner('handoff')
+    setEnemyActing(false)
+    setFeedback(null)
+    setImpact(null)
+    setTurnMotion('idle')
+    setPlayedCardId(null)
+    setMessage(t('message.enemyIdentified', { name: t(nextEnemy.nameKey) }))
+    showChapter({
+      kicker: t('game.encounter', { n: encounterNumber }),
+      title: t('chapter.hostileIdentified'),
+      detail: t('chapter.hostileIdentifiedDetail', { name: t(nextEnemy.nameKey), subtitle: t(nextEnemy.subtitleKey) }),
+      tone: 'red',
+    }, CHAPTER_DURATION.intro)
+    later(() => {
+      setBattleEntry('enemy')
+      sound.deal()
+    }, ENCOUNTER_ENTRY.enemyDeploy)
+    later(() => {
+      setBattleEntry('hero')
+      setMessage(t('message.operativeDeployed', { name: hero.name }))
+      sound.deal()
+    }, ENCOUNTER_ENTRY.heroDeploy)
+    later(() => {
+      setBattleEntry('ready')
+      setHandDealId(value => value + 1)
+      setMessage(t('message.readIntent'))
+      showChapter({
+        kicker: t('game.encounter', { n: encounterNumber }),
+        title: t('chapter.yourTurn'),
+        detail: t('chapter.yourTurnDetail'),
+        tone: 'cyan',
+      }, CHAPTER_DURATION.turn)
+    }, ENCOUNTER_ENTRY.controlBrief)
+    later(() => {
+      setTurnOwner('player')
+      setBusy(false)
+    }, ENCOUNTER_ENTRY.unlock)
+  }, [hero.name, later, showChapter])
+
   useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
 
   const selectHero = useCallback((id: HeroId) => {
@@ -147,7 +196,6 @@ export function useAnomalyHand() {
     setIsabelRecoveryUsed(false)
     setGetuMomentum(false)
     dealHand(startSequence, heroId)
-    setBusy(true)
     setUpgrades(DEFAULT_UPGRADES)
     setTotalTurns(0)
     setSignatureUses(0)
@@ -156,23 +204,10 @@ export function useAnomalyHand() {
     setPlayerState('ready')
     setPlayedCardId(null)
     setTurnMotion('idle')
-    setTurnOwner('handoff')
-    setEnemyActing(false)
-    setFeedback(null)
     setSelectedRewardId(null)
-    setMessage(t('message.readIntent'))
     sound.select()
-    showChapter({
-      kicker: t('game.encounter', { n: 1 }),
-      title: t('chapter.yourTurn'),
-      detail: t('chapter.yourTurnDetail'),
-      tone: 'cyan',
-    }, CHAPTER_DURATION.intro)
-    later(() => {
-      setTurnOwner('player')
-      setBusy(false)
-    }, CHAPTER_DURATION.intro)
-  }, [dealHand, heroId, later, showChapter])
+    beginEncounter(ENEMIES[0], 1)
+  }, [beginEncounter, dealHand, heroId])
 
   const resolveEnemy = useCallback((
     nextPlayerBlock: number,
@@ -318,7 +353,7 @@ export function useAnomalyHand() {
   }, [encounterIndex, later, showChapter, upgrades.extraHeal])
 
   const playCard = useCallback((cardId: string) => {
-    if (busy || phase !== 'battle') return
+    if (busy || battleEntry !== 'ready' || phase !== 'battle') return
     const card = hand.find(item => item.id === cardId)
     if (!card) return
 
@@ -535,6 +570,7 @@ export function useAnomalyHand() {
     }, card.kind === 'signature' ? 1260 : 1100)
     resolveEnemy(block, nextEnemyHp, nextSequence, nextPlayerHp)
   }, [
+    battleEntry,
     busy,
     calibrated,
     enemyBlock,
@@ -593,23 +629,13 @@ export function useAnomalyHand() {
       setIsabelRecoveryUsed(false)
       setGetuMomentum(false)
       dealHand(startSequence, heroId)
-      setMessage(t('message.newEncounter'))
       setPhase('battle')
-      setTurnOwner('handoff')
-      setEnemyActing(false)
-      showChapter({
-        kicker: t('game.encounter', { n: nextIndex + 1 }),
-        title: t('chapter.yourTurn'),
-        detail: t('chapter.yourTurnDetail'),
-        tone: 'cyan',
-      }, CHAPTER_DURATION.intro)
+      beginEncounter(nextEnemy, nextIndex + 1)
       later(() => {
-        setTurnOwner('player')
-        setBusy(false)
         setSelectedRewardId(null)
-      }, CHAPTER_DURATION.intro)
+      }, ENCOUNTER_ENTRY.unlock)
     }, 620)
-  }, [busy, dealHand, encounterIndex, heroId, later, showChapter, upgrades.startSequence])
+  }, [beginEncounter, busy, dealHand, encounterIndex, heroId, later, upgrades.startSequence])
 
   const changeHero = useCallback(() => {
     timers.current.forEach(window.clearTimeout)
@@ -621,6 +647,7 @@ export function useAnomalyHand() {
     setPlayedCardId(null)
     setTurnMotion('idle')
     setTurnOwner('player')
+    setBattleEntry('briefing')
     setEnemyActing(false)
     setFeedback(null)
     setChapter(null)
@@ -634,13 +661,13 @@ export function useAnomalyHand() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (phase !== 'battle' || busy) return
+      if (phase !== 'battle' || busy || battleEntry !== 'ready') return
       const index = Number(event.key) - 1
       if (index >= 0 && index < hand.length) playCard(hand[index].id)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [busy, hand, phase, playCard])
+  }, [battleEntry, busy, hand, phase, playCard])
 
   return {
     phase,
@@ -665,6 +692,7 @@ export function useAnomalyHand() {
     playedCardId,
     turnMotion,
     turnOwner,
+    battleEntry,
     enemyActing,
     handDealId,
     score,
