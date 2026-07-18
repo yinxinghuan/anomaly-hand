@@ -887,6 +887,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
 /* Battle — overlapping classified files rather than two generic panels. */
 .ah-battle {
+  position: relative;
+  isolation: isolate;
   height: 100%;
   padding:
     max(13px, env(safe-area-inset-top))
@@ -897,6 +899,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   gap: 5px;
 
   &__header {
+    grid-row: 1;
     min-height: 51px;
     display: flex;
     align-items: flex-start;
@@ -925,6 +928,16 @@ html[lang="zh-CN"] .ah-reward-card > strong {
         letter-spacing: .06em;
       }
     }
+  }
+
+  &__resolution {
+    position: relative;
+    z-index: 40;
+    grid-row: 2;
+    grid-column: 1;
+    min-height: 0;
+    pointer-events: none;
+    isolation: isolate;
   }
 
   &__tools {
@@ -1000,6 +1013,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 }
 
 .ah-stage {
+  z-index: 1;
+  grid-row: 2;
+  grid-column: 1;
   position: relative;
   min-height: 0;
   overflow: hidden;
@@ -1481,6 +1497,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 }
 
 .ah-message {
+  grid-row: 3;
   align-self: center;
   overflow: hidden;
   color: @dust;
@@ -1513,12 +1530,13 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
 .ah-combat-callout {
   position: absolute;
-  z-index: 23;
+  z-index: 1;
   top: 49%;
   left: 50%;
   width: min(88%, 350px);
   display: grid;
   justify-items: center;
+  isolation: isolate;
   color: @chalk;
   pointer-events: none;
   text-align: center;
@@ -1651,13 +1669,15 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
   }
 
-  &--hero { left: 58%; }
   &--hurt { color: @red; }
   &--perfect { color: @mint; }
   &--signature { color: @cyan; }
 }
 
 .ah-hand {
+  position: relative;
+  z-index: 2;
+  grid-row: 5;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
@@ -1674,6 +1694,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &__label {
+    grid-row: 4;
     display: flex;
     align-items: center;
     gap: 8px;

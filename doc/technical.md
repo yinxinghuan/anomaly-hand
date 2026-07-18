@@ -74,7 +74,7 @@ anomaly-hand/
 
 ### 界面位图
 
-`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台、战术卡、奖励与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
+`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。战斗网格把桌面固定在层级 1、手牌在 2、`ah-battle__resolution` 在 40；两拍结算不再嵌入舞台，而是由隔离的结果覆盖层承载，底板伪元素只在结果卡内部叠放。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台、战术卡、奖励与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
 
 ### 字体系统
 
