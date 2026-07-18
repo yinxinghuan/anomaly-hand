@@ -1541,8 +1541,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   pointer-events: none;
   text-align: center;
   transform: translate(-50%, -50%);
-  text-shadow: 2px 0 @red, -2px 0 @cyan, 0 10px 16px fade(#000, 78%);
-  animation: ah-callout-shell 2020ms linear both;
+  text-shadow: 0 7px 16px fade(#000, 72%);
+  animation: ah-callout-shell 300ms cubic-bezier(.1, .8, .16, 1) both;
 
   &::before,
   &::after {
@@ -1553,22 +1553,15 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &::before {
-    inset: -26px -18px;
-    border-block: 1px solid fade(@paper, 47%);
+    inset: 3px -18px;
+    border-block: 1px solid fade(@paper, 56%);
     background:
-      linear-gradient(90deg, transparent 0 8%, fade(@red, 24%) 8% 17%, transparent 17% 81%, fade(@cyan, 22%) 81% 92%, transparent 92%),
-      fade(@ink, 82%);
-    clip-path: polygon(0 12%, 9% 0, 100% 8%, 94% 100%, 4% 92%);
+      linear-gradient(90deg, @red 0 32px, transparent 32px calc(100% - 32px), @cyan calc(100% - 32px));
+    opacity: 1;
   }
 
   &::after {
-    top: -45px;
-    left: 50%;
-    width: 66px;
-    height: 66px;
-    border: 1px solid fade(@paper, 50%);
-    transform: translateX(-50%) rotate(45deg);
-    box-shadow: 0 0 0 8px fade(@red, 10%), 0 0 0 19px fade(@cyan, 7%);
+    display: none;
   }
 
   &__effect {
@@ -1576,7 +1569,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     justify-items: center;
     min-width: min(100%, 320px);
     padding: 18px 16px 16px;
-    animation: ah-callout-effect-in 680ms cubic-bezier(.1, .8, .16, 1) both;
+    animation: ah-callout-effect-in 300ms cubic-bezier(.1, .8, .16, 1) both;
 
     strong {
       position: absolute;
@@ -1661,7 +1654,30 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
   &[data-stage="value"] {
     .ah-combat-callout__effect {
-      animation: ah-callout-effect-out 210ms cubic-bezier(.4, 0, .84, .2) both;
+      padding: 3px 16px 8px;
+      animation: ah-callout-effect-settle 220ms cubic-bezier(.18, .82, .2, 1) both;
+
+      strong {
+        top: -9px;
+        right: 13%;
+        font-size: clamp(20px, 6vw, 31px);
+      }
+
+      > b {
+        font-size: clamp(17px, 5vw, 25px);
+        line-height: 1;
+      }
+
+      > small {
+        margin-top: 5px;
+        padding: 3px 7px;
+        font-size: 10px;
+      }
+
+      .ah-combat-callout__score {
+        margin-top: 5px;
+        font-size: 12px;
+      }
     }
 
     .ah-combat-callout__amount {
@@ -2868,9 +2884,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 }
 
 @keyframes ah-callout-shell {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
-  7%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -57%) scale(1.03); }
+  0% { opacity: 0; transform: translate(-50%, -48%) scale(.86); }
+  62% { opacity: 1; transform: translate(-50%, -51%) scale(1.03); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @keyframes ah-callout-effect-in {
@@ -2879,8 +2895,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   100% { opacity: 1; transform: translateY(0) scale(1) skewX(0); }
 }
 
-@keyframes ah-callout-effect-out {
-  to { opacity: 0; transform: translateY(-25px) scale(1.08); filter: blur(2px); }
+@keyframes ah-callout-effect-settle {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 1; transform: translateY(-1px) scale(1); }
 }
 
 @keyframes ah-callout-value-in {
