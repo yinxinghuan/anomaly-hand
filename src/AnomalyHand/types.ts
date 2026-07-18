@@ -57,6 +57,7 @@ export type Rating = 'S' | 'A' | 'B' | 'C'
 
 export type CombatFeedback = {
   id: number
+  stage: 'effect' | 'value'
   target: 'enemy' | 'player' | 'hero'
   kind: 'damage' | 'block' | 'heal' | 'hurt' | 'perfect' | 'signature'
   value: number
@@ -64,5 +65,6 @@ export type CombatFeedback = {
   amountPolarity?: 'gain' | 'loss'
   rating?: Rating
   scoreDelta?: number
+  effectKey: string
   labelKey: string
 }

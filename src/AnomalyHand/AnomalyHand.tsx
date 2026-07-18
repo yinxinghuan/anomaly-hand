@@ -225,10 +225,13 @@ export default function AnomalyHand() {
                 {game.streak > 1 && <b>{t('game.streak', { n: game.streak })}</b>}
               </div>
               {game.feedback && (
-                <div className={`ah-combat-callout ah-combat-callout--${game.feedback.target} ah-combat-callout--${game.feedback.kind}`} key={game.feedback.id}>
-                  {game.feedback.rating && <strong>{game.feedback.rating}</strong>}
-                  <b>{t(game.feedback.labelKey)}</b>
-                  {game.feedback.scoreDelta != null && <small className="ah-combat-callout__score">{t('feedback.tacticalScore')} +{game.feedback.scoreDelta}</small>}
+                <div className={`ah-combat-callout ah-combat-callout--${game.feedback.target} ah-combat-callout--${game.feedback.kind}`} data-stage={game.feedback.stage} key={game.feedback.id}>
+                  <div className="ah-combat-callout__effect">
+                    {game.feedback.rating && <strong>{game.feedback.rating}</strong>}
+                    <b>{t(game.feedback.effectKey)}</b>
+                    <small>{t(game.feedback.labelKey)}</small>
+                    {game.feedback.scoreDelta != null && <span className="ah-combat-callout__score">{t('feedback.tacticalScore')} +{game.feedback.scoreDelta}</span>}
+                  </div>
                   {game.feedback.value > 0 && game.feedback.amountKey && (
                     <span className={`ah-combat-callout__amount ah-combat-callout__amount--${game.feedback.amountPolarity ?? 'gain'}`}>
                       <small>{t(game.feedback.amountKey)}</small>
@@ -237,7 +240,7 @@ export default function AnomalyHand() {
                   )}
                 </div>
               )}
-              {game.impact && (
+              {game.impact && game.feedback?.stage === 'value' && (
                 <div className={`ah-stage__burst ah-stage__burst--${game.impact}`} aria-hidden="true">
                   <i /><i /><i /><i /><i /><i /><i /><i />
                 </div>

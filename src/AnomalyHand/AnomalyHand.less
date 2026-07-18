@@ -299,6 +299,12 @@ html[lang="en"] .ah-reward-card > strong {
   letter-spacing: .035em;
 }
 
+html[lang="en"] .ah-combat-callout__effect > b {
+  max-width: 88%;
+  font-size: clamp(24px, 7.2vw, 39px);
+  letter-spacing: .04em;
+}
+
 html[lang="zh-CN"] .ah h1,
 html[lang="zh-CN"] .ah h2,
 html[lang="zh-CN"] .ah-feature-card__copy h2,
@@ -576,8 +582,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     > p:last-child {
       margin: 8px 0 0;
       color: @dust;
-      font-size: 14px;
-      line-height: 1.35;
+      font-size: 16px;
+      line-height: 1.45;
     }
   }
 
@@ -756,7 +762,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     b {
       margin-bottom: 3px;
       color: @red;
-      font: 500 8px/1 "AH Mono", monospace;
+      font: 500 9px/1.15 "AH Mono", monospace;
       letter-spacing: .09em;
     }
 
@@ -766,8 +772,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
     span {
       color: @paper;
-      font-size: 11px;
-      line-height: 1.3;
+      font-size: 13px;
+      line-height: 1.38;
     }
   }
 }
@@ -1348,12 +1354,12 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
   small {
     color: @dust;
-    font: 500 7px/1.2 "AH Mono", monospace;
+    font: 500 9px/1.2 "AH Mono", monospace;
   }
 
   strong {
-    font-size: 15px;
-    line-height: 1.05;
+    font-size: 17px;
+    line-height: 1.1;
   }
 
   &--guard {
@@ -1386,7 +1392,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     gap: 4px;
     color: @chalk;
     .ah-number-type();
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1;
     letter-spacing: .035em;
 
@@ -1425,7 +1431,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   border: 1px solid @cyan;
   background: @ink;
   color: @cyan;
-  font: 500 8px/1 "AH Mono", monospace;
+  font: 500 10px/1 "AH Mono", monospace;
   transform: rotate(-2deg);
 
   &--charged {
@@ -1478,8 +1484,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   align-self: center;
   overflow: hidden;
   color: @dust;
-  font-size: 11px;
-  line-height: 26px;
+  font-size: 13px;
+  line-height: 28px;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1507,34 +1513,107 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
 .ah-combat-callout {
   position: absolute;
-  z-index: 20;
-  top: 40%;
-  left: 49%;
-  width: min(70%, 285px);
+  z-index: 23;
+  top: 49%;
+  left: 50%;
+  width: min(88%, 350px);
   display: grid;
   justify-items: center;
   color: @chalk;
   pointer-events: none;
   text-align: center;
-  text-shadow: 2px 0 @red, -2px 0 @cyan, 0 8px 14px fade(#000, 72%);
-  animation: ah-callout 1350ms cubic-bezier(.1, .78, .2, 1) both;
+  transform: translate(-50%, -50%);
+  text-shadow: 2px 0 @red, -2px 0 @cyan, 0 10px 16px fade(#000, 78%);
+  animation: ah-callout-shell 2020ms linear both;
 
-  > strong { .ah-number-accent(); font-size: clamp(47px, 14vw, 72px); line-height: .68; }
-  b { padding: 5px 7px 4px; background: @ink; border-block: 1px solid fade(@paper, 56%); font-size: clamp(11px, 3vw, 16px); line-height: 1; letter-spacing: .075em; }
-  &__score { margin-top: 4px; color: @mint; .ah-number-type(); font-size: 14px; }
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+  }
 
-  &__amount {
-    margin-top: 5px;
+  &::before {
+    inset: -26px -18px;
+    border-block: 1px solid fade(@paper, 47%);
+    background:
+      linear-gradient(90deg, transparent 0 8%, fade(@red, 24%) 8% 17%, transparent 17% 81%, fade(@cyan, 22%) 81% 92%, transparent 92%),
+      fade(@ink, 82%);
+    clip-path: polygon(0 12%, 9% 0, 100% 8%, 94% 100%, 4% 92%);
+  }
+
+  &::after {
+    top: -45px;
+    left: 50%;
+    width: 66px;
+    height: 66px;
+    border: 1px solid fade(@paper, 50%);
+    transform: translateX(-50%) rotate(45deg);
+    box-shadow: 0 0 0 8px fade(@red, 10%), 0 0 0 19px fade(@cyan, 7%);
+  }
+
+  &__effect {
     display: grid;
     justify-items: center;
-    gap: 2px;
+    min-width: min(100%, 320px);
+    padding: 18px 16px 16px;
+    animation: ah-callout-effect-in 680ms cubic-bezier(.1, .8, .16, 1) both;
+
+    strong {
+      position: absolute;
+      top: -29px;
+      right: 7%;
+      .ah-number-accent();
+      font-size: clamp(36px, 11vw, 58px);
+      line-height: .72;
+      transform: rotate(-7deg);
+    }
+
+    > b {
+      max-width: 94%;
+      color: @chalk;
+      .ah-display-type();
+      font-size: clamp(28px, 8vw, 43px);
+      line-height: .9;
+      letter-spacing: .025em;
+    }
+
+    > small {
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-block: 1px solid fade(@paper, 48%);
+      color: @paper;
+      font: 700 12px/1.15 "AH Mono", monospace;
+      letter-spacing: .1em;
+    }
+  }
+
+  &__score {
+    margin-top: 8px;
+    color: @mint;
+    .ah-number-type();
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: .06em;
+  }
+
+  &__amount {
+    position: relative;
+    z-index: 2;
+    margin-top: 0;
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    opacity: 0;
+    transform: translateY(22px) scale(.72);
 
     small {
-      padding: 3px 5px;
+      padding: 6px 10px;
       border: 1px solid currentColor;
       background: fade(@ink, 88%);
       color: @chalk;
-      font: 700 8px/1 "AH Mono", monospace;
+      font: 700 13px/1 "AH Mono", monospace;
       letter-spacing: .12em;
       text-shadow: none;
     }
@@ -1544,9 +1623,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       border: 0;
       background: transparent;
       .ah-number-type();
-      font-size: 43px;
-      line-height: .75;
-      text-shadow: 2px 2px 0 fade(#000, 72%);
+      font-size: clamp(78px, 24vw, 116px);
+      line-height: .68;
+      text-shadow: 4px 4px 0 fade(#000, 76%);
     }
 
     &--loss {
@@ -1562,7 +1641,17 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
   }
 
-  &--hero { left: auto; right: 1%; }
+  &[data-stage="value"] {
+    .ah-combat-callout__effect {
+      animation: ah-callout-effect-out 210ms cubic-bezier(.4, 0, .84, .2) both;
+    }
+
+    .ah-combat-callout__amount {
+      animation: ah-callout-value-in 820ms cubic-bezier(.08, .8, .13, 1) both;
+    }
+  }
+
+  &--hero { left: 58%; }
   &--hurt { color: @red; }
   &--perfect { color: @mint; }
   &--signature { color: @cyan; }
@@ -1629,7 +1718,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 .ah-card {
   position: relative;
   min-width: 0;
-  height: clamp(168px, 23vh, 205px);
+  height: clamp(178px, 24.5vh, 218px);
   overflow: hidden;
   border: 1px solid fade(@paper, 47%);
   border-radius: 1px;
@@ -1754,8 +1843,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   &__desc {
     align-self: end;
     color: @dust;
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: clamp(12px, 3.15vw, 13px);
+    line-height: 1.38;
   }
 
   &--breach {
@@ -2001,8 +2090,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       max-width: 75%;
       margin: 0;
       color: @dust;
-      font-size: 14px;
-      line-height: 1.35;
+      font-size: 16px;
+      line-height: 1.45;
     }
   }
 
@@ -2181,8 +2270,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     z-index: 2;
     align-self: end;
     color: @dust;
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 12px;
+    line-height: 1.38;
   }
 
   &__stamp {
@@ -2270,7 +2359,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   > p:not(.ah-kicker) {
     margin: 5px 0 12px;
     color: @dust;
-    font-size: 13px;
+    font-size: 15px;
+    line-height: 1.4;
   }
 
   dl {
@@ -2289,7 +2379,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
     dt {
       color: @dust;
-      font-size: 10px;
+      font-size: 12px;
     }
 
     dd {
@@ -2382,14 +2472,14 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       }
 
       b {
-        font-size: 15px;
+        font-size: 17px;
       }
 
       span {
         margin-top: 3px;
         color: @dust;
-        font-size: 13px;
-        line-height: 1.35;
+        font-size: 15px;
+        line-height: 1.45;
       }
     }
   }
@@ -2446,8 +2536,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
       span {
         display: -webkit-box;
         overflow: hidden;
-        font-size: 9px;
-        line-height: 1.22;
+        font-size: 11px;
+        line-height: 1.3;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
       }
@@ -2476,6 +2566,22 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
   }
 
+  .ah-combat-callout {
+    top: 47%;
+
+    &__effect {
+      padding: 14px 12px 12px;
+
+      > b {
+        font-size: clamp(24px, 8vw, 34px);
+      }
+    }
+
+    &__amount b {
+      font-size: clamp(68px, 22vw, 92px);
+    }
+  }
+
   .ah-intent {
     min-height: 45px;
     padding: 4px 6px;
@@ -2487,12 +2593,12 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   .ah-card {
-    height: 150px;
+    height: 154px;
     padding: 9px 6px 7px;
 
     &__desc {
-      font-size: 9px;
-      line-height: 1.22;
+      font-size: 11px;
+      line-height: 1.3;
     }
 
     > strong {
@@ -2561,8 +2667,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
 
     &__desc {
-      font-size: 9px;
-      line-height: 1.22;
+      font-size: 10px;
+      line-height: 1.3;
     }
   }
 
@@ -2740,11 +2846,27 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   100% { opacity: 0; width: 170px; }
 }
 
-@keyframes ah-callout {
-  0% { opacity: 0; transform: translate(-50%, 32px) scale(.68) skewX(-9deg); }
-  12% { opacity: 1; transform: translate(-50%, -10px) scale(1.18) skewX(3deg); }
-  24%, 78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -27px) scale(1.04); }
+@keyframes ah-callout-shell {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+  7%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -57%) scale(1.03); }
+}
+
+@keyframes ah-callout-effect-in {
+  0% { opacity: 0; transform: translateY(42px) scale(.78) skewX(-9deg); }
+  36% { opacity: 1; transform: translateY(-5px) scale(1.08) skewX(3deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) skewX(0); }
+}
+
+@keyframes ah-callout-effect-out {
+  to { opacity: 0; transform: translateY(-25px) scale(1.08); filter: blur(2px); }
+}
+
+@keyframes ah-callout-value-in {
+  0% { opacity: 0; transform: translateY(32px) scale(.64) skewX(-12deg); }
+  18% { opacity: 1; transform: translateY(-11px) scale(1.26) skewX(4deg); }
+  38% { opacity: 1; transform: translateY(0) scale(.98) skewX(-1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) skewX(0); }
 }
 
 @keyframes ah-hurt-portrait {

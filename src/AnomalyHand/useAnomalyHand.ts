@@ -13,9 +13,10 @@ const CHAPTER_DURATION = {
   result: 1850,
 } as const
 const CHAPTER_EXIT_MS = 260
-const COMBAT_FEEDBACK_DURATION = 1350
-const ENEMY_CHAPTER_DELAY = 1650
-const PLAYER_RESULT_HOLD = 1450
+const COMBAT_FEEDBACK_EFFECT_HOLD = 680
+const COMBAT_FEEDBACK_DURATION = 2020
+const ENEMY_CHAPTER_DELAY = 2420
+const PLAYER_RESULT_HOLD = 2120
 const ENCOUNTER_ENTRY = {
   enemyDeploy: CHAPTER_DURATION.intro + 80,
   heroDeploy: CHAPTER_DURATION.intro + 900,
@@ -107,10 +108,11 @@ export function useAnomalyHand() {
     timers.current.push(id)
   }, [])
 
-  const showFeedback = useCallback((next: Omit<CombatFeedback, 'id'>, duration = COMBAT_FEEDBACK_DURATION) => {
+  const showFeedback = useCallback((next: Omit<CombatFeedback, 'id' | 'stage'>, duration = COMBAT_FEEDBACK_DURATION) => {
     const id = feedbackId.current + 1
     feedbackId.current = id
-    setFeedback({ ...next, id })
+    setFeedback({ ...next, id, stage: 'effect' })
+    later(() => setFeedback(current => current?.id === id ? { ...current, stage: 'value' } : current), Math.min(COMBAT_FEEDBACK_EFFECT_HOLD, duration - 180))
     later(() => setFeedback(current => current?.id === id ? null : current), duration)
   }, [later])
 
@@ -247,21 +249,21 @@ export function useAnomalyHand() {
           setPlayerState('hurt')
           setMessage(t('message.hurt', { n: damage }))
           sound.hurt()
-          showFeedback({ target: 'hero', kind: 'hurt', value: damage, amountKey: 'feedback.playerHealth', amountPolarity: 'loss', labelKey: 'rating.breached' })
+          showFeedback({ target: 'hero', kind: 'hurt', value: damage, amountKey: 'feedback.playerHealth', amountPolarity: 'loss', effectKey: 'feedback.effect.hurt', labelKey: 'rating.breached' })
           if (heroId === 'smith') setSmithFury(true)
         } else {
           setMessage(t('message.blocked'))
           sound.guard(true)
           setStreak(value => value + 1)
           setScore(value => value + 90)
-          showFeedback({ target: 'hero', kind: 'perfect', value: 0, rating: 'A', scoreDelta: 90, labelKey: 'rating.held' })
+          showFeedback({ target: 'hero', kind: 'perfect', value: 0, rating: 'A', scoreDelta: 90, effectKey: 'feedback.effect.perfect', labelKey: 'rating.held' })
         }
       } else if (intent.kind === 'guard') {
         setEnemyBlock(value => value + intent.value)
         setPlayerBlock(0)
         setMessage(t('message.enemyGuard', { n: intent.value }))
         sound.guard()
-        showFeedback({ target: 'enemy', kind: 'block', value: intent.value, amountKey: 'feedback.enemyBlock', amountPolarity: 'gain', labelKey: 'rating.enemyGuard' })
+        showFeedback({ target: 'enemy', kind: 'block', value: intent.value, amountKey: 'feedback.enemyBlock', amountPolarity: 'gain', effectKey: 'feedback.effect.enemyGuard', labelKey: 'rating.enemyGuard' })
       } else {
         setCharged(true)
         setPlayerBlock(heroId === 'goat' ? 3 : 0)
@@ -278,7 +280,7 @@ export function useAnomalyHand() {
               : t('message.enemyCharge'),
         )
         sound.ready()
-        showFeedback({ target: 'enemy', kind: 'signature', value: 5, amountKey: 'feedback.enemyCharge', amountPolarity: 'gain', labelKey: 'rating.enemyCharge' })
+        showFeedback({ target: 'enemy', kind: 'signature', value: 5, amountKey: 'feedback.enemyCharge', amountPolarity: 'gain', effectKey: 'feedback.effect.enemyCharge', labelKey: 'rating.enemyCharge' })
       }
 
       if (resultingHp <= 0) {
@@ -541,6 +543,13 @@ export function useAnomalyHand() {
         amountPolarity: damage > 0 ? 'loss' : 'gain',
         rating,
         scoreDelta,
+        effectKey: card.kind === 'signature'
+          ? 'feedback.effect.signature'
+          : damage > 0
+            ? 'feedback.effect.damage'
+            : nextPlayerHp > playerHp
+              ? 'feedback.effect.heal'
+              : 'feedback.effect.block',
         labelKey,
       })
       if (damage > 0 && card.kind !== 'signature') sound.hit(rating)
@@ -581,7 +590,7 @@ export function useAnomalyHand() {
     later(() => {
       setImpact(null)
       setTurnMotion('discard')
-    }, card.kind === 'signature' ? 1260 : 1100)
+    }, card.kind === 'signature' ? 1650 : 1450)
     resolveEnemy(block, nextEnemyHp, nextSequence, nextPlayerHp)
   }, [
     battleEntry,
