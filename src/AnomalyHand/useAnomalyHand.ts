@@ -13,6 +13,9 @@ const CHAPTER_DURATION = {
   result: 1850,
 } as const
 const CHAPTER_EXIT_MS = 260
+const COMBAT_FEEDBACK_DURATION = 1350
+const ENEMY_CHAPTER_DELAY = 1650
+const PLAYER_RESULT_HOLD = 1450
 const DEFAULT_UPGRADES: Upgrades = {
   breach: 0,
   guard: 0,
@@ -97,7 +100,7 @@ export function useAnomalyHand() {
     timers.current.push(id)
   }, [])
 
-  const showFeedback = useCallback((next: Omit<CombatFeedback, 'id'>, duration = 760) => {
+  const showFeedback = useCallback((next: Omit<CombatFeedback, 'id'>, duration = COMBAT_FEEDBACK_DURATION) => {
     const id = feedbackId.current + 1
     feedbackId.current = id
     setFeedback({ ...next, id })
@@ -190,11 +193,11 @@ export function useAnomalyHand() {
         tone: 'red',
       }, CHAPTER_DURATION.hostile)
       sound.select()
-    }, 400)
+    }, ENEMY_CHAPTER_DELAY)
 
     later(() => {
       setEnemyActing(true)
-    }, 400 + CHAPTER_DURATION.hostile + 60)
+    }, ENEMY_CHAPTER_DELAY + CHAPTER_DURATION.hostile + 60)
 
     later(() => {
       let resultingHp = currentPlayerHp
@@ -277,8 +280,8 @@ export function useAnomalyHand() {
           setTurnOwner('player')
           setBusy(false)
         }, CHAPTER_DURATION.turn)
-      }, 640)
-    }, 400 + CHAPTER_DURATION.hostile + 220)
+      }, PLAYER_RESULT_HOLD)
+    }, ENEMY_CHAPTER_DELAY + CHAPTER_DURATION.hostile + 220)
   }, [dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, showChapter, showFeedback])
 
   const finishEncounter = useCallback(() => {
@@ -517,19 +520,19 @@ export function useAnomalyHand() {
           setPhase('defeat')
           setBusy(false)
         }, CHAPTER_DURATION.result)
-      }, 420)
+      }, PLAYER_RESULT_HOLD)
       return
     }
 
     if (nextEnemyHp <= 0) {
-      later(finishEncounter, card.kind === 'signature' ? 780 : 420)
+      later(finishEncounter, Math.max(PLAYER_RESULT_HOLD, card.kind === 'signature' ? 1180 : 0))
       return
     }
 
     later(() => {
       setImpact(null)
       setTurnMotion('discard')
-    }, card.kind === 'signature' ? 760 : 440)
+    }, card.kind === 'signature' ? 1260 : 1100)
     resolveEnemy(block, nextEnemyHp, nextSequence, nextPlayerHp)
   }, [
     busy,
