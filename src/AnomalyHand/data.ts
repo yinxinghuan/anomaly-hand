@@ -1,4 +1,4 @@
-import type { ActionCard, Enemy, Hero, Reward } from './types'
+import type { ActionCard, Enemy, Hero, HeroId, Reward } from './types'
 import lasImage from './img/heroes/cutouts/las.webp'
 import isabelImage from './img/heroes/cutouts/isabel.webp'
 import smithImage from './img/heroes/cutouts/smith.webp'
@@ -108,32 +108,32 @@ export const BASE_CARDS: ActionCard[] = [
   { id: 'calibrate', kind: 'tech', nameKey: 'card.calibrate.name', value: 3, descriptionKey: 'card.calibrate.desc' },
 ]
 
-export const ENEMIES: Enemy[] = [
-  {
-    id: 'leech',
-    nameKey: 'enemy.leech.name',
-    subtitleKey: 'enemy.leech.subtitle',
-    maxHp: 18,
-    attack: 4,
-    pattern: ['attack', 'guard', 'attack', 'charge'],
-  },
-  {
-    id: 'hound',
-    nameKey: 'enemy.hound.name',
-    subtitleKey: 'enemy.hound.subtitle',
-    maxHp: 24,
-    attack: 6,
-    pattern: ['guard', 'attack', 'charge', 'attack'],
-  },
-  {
-    id: 'warden',
-    nameKey: 'enemy.warden.name',
-    subtitleKey: 'enemy.warden.subtitle',
-    maxHp: 34,
-    attack: 7,
-    pattern: ['charge', 'attack', 'guard', 'attack'],
-  },
+const RIVAL_PROFILES: Array<Omit<Enemy, 'maxHp' | 'attack'>> = [
+  { id: 'rival-las', heroId: 'las', nameKey: 'rival.las.name', subtitleKey: 'rival.las.subtitle', pattern: ['charge', 'attack', 'guard', 'attack'] },
+  { id: 'rival-isabel', heroId: 'isabel', nameKey: 'rival.isabel.name', subtitleKey: 'rival.isabel.subtitle', pattern: ['guard', 'guard', 'attack', 'charge'] },
+  { id: 'rival-smith', heroId: 'smith', nameKey: 'rival.smith.name', subtitleKey: 'rival.smith.subtitle', pattern: ['attack', 'attack', 'charge', 'guard'] },
+  { id: 'rival-goat', heroId: 'goat', nameKey: 'rival.goat.name', subtitleKey: 'rival.goat.subtitle', pattern: ['charge', 'attack', 'attack', 'guard'] },
+  { id: 'rival-getu', heroId: 'getu', nameKey: 'rival.getu.name', subtitleKey: 'rival.getu.subtitle', pattern: ['guard', 'charge', 'attack', 'attack'] },
+  { id: 'rival-chill', heroId: 'chill', nameKey: 'rival.chill.name', subtitleKey: 'rival.chill.subtitle', pattern: ['guard', 'attack', 'guard', 'attack'] },
+  { id: 'rival-kibo', heroId: 'kibo', nameKey: 'rival.kibo.name', subtitleKey: 'rival.kibo.subtitle', pattern: ['charge', 'guard', 'charge', 'attack'] },
+  { id: 'rival-john', heroId: 'john', nameKey: 'rival.john.name', subtitleKey: 'rival.john.subtitle', pattern: ['attack', 'guard', 'attack', 'charge'] },
 ]
+
+const RIVAL_HP = [18, 20, 22, 25, 28, 31, 35]
+const RIVAL_ATTACK = [3, 4, 4, 5, 6, 6, 7]
+
+export function createRivalEncounterRoster(playerId: HeroId, round = 1): Enemy[] {
+  const rivals = RIVAL_PROFILES.filter(profile => profile.heroId !== playerId)
+  for (let index = rivals.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    ;[rivals[index], rivals[swapIndex]] = [rivals[swapIndex], rivals[index]]
+  }
+  return rivals.map((rival, index) => ({
+    ...rival,
+    maxHp: RIVAL_HP[index] + (round - 1) * 8,
+    attack: RIVAL_ATTACK[index] + (round - 1),
+  }))
+}
 
 export const REWARDS: Reward[] = [
   { id: 'breach', nameKey: 'reward.breach.name', descriptionKey: 'reward.breach.desc' },

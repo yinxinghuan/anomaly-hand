@@ -1,18 +1,28 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Icon } from './icons'
 import { useAnomalyHand } from './useAnomalyHand'
+import { usePlayerArchiveCard } from './usePlayerArchiveCard'
+import { useArchiveLeaderboard } from './useArchiveLeaderboard'
 import { setSoundMuted } from './audio'
+import { HEROES } from './data'
+import { openAigramProfile } from '@shared/runtime'
 import { t } from './i18n'
-import type { ActionCard, Hero, Intent, RewardId } from './types'
-import enemyLeech from './img/interface/enemy-leech.webp'
-import enemyHound from './img/interface/enemy-hound.webp'
-import enemyWarden from './img/interface/enemy-warden.webp'
+import type { ActionCard, Enemy, Hero, Intent, RewardId } from './types'
+import breachArt from './img/cards/breach.svg'
+import overloadArt from './img/cards/overload.svg'
+import braceArt from './img/cards/brace.svg'
+import counterArt from './img/cards/counter.svg'
+import probeArt from './img/cards/probe.svg'
+import calibrateArt from './img/cards/calibrate.svg'
 import './AnomalyHand.less'
 
-const ENEMY_ART: Record<string, string> = {
-  leech: enemyLeech,
-  hound: enemyHound,
-  warden: enemyWarden,
+const CARD_ART: Record<string, string> = {
+  breach: breachArt,
+  overload: overloadArt,
+  brace: braceArt,
+  counter: counterArt,
+  probe: probeArt,
+  calibrate: calibrateArt,
 }
 
 const REWARD_ICON: Record<RewardId, 'breach' | 'guard' | 'sequence' | 'health' | 'tech'> = {
@@ -80,6 +90,7 @@ function Card({ card, disabled, motion, onPlay }: { card: ActionCard; disabled: 
       onPointerDown={onPlay}
     >
       <span className="ah-card__registration" />
+      {card.kind !== 'signature' && <img className="ah-card__art" src={CARD_ART[card.id]} alt="" draggable={false} />}
       <span className="ah-card__kind"><Icon name={card.kind} size={18} /></span>
       <strong>{t(card.nameKey)}</strong>
       {card.value != null && <b>{card.value}</b>}
@@ -89,10 +100,11 @@ function Card({ card, disabled, motion, onPlay }: { card: ActionCard; disabled: 
   )
 }
 
-function EnemyArt({ id, impact }: { id: string; impact: string | null }) {
+function EnemyArt({ enemy, impact }: { enemy: Enemy; impact: string | null }) {
+  const rival = HEROES.find(hero => hero.id === enemy.heroId)!
   return (
-    <div className={`ah-enemy-art ah-enemy-art--${id} ${impact === 'enemy' || impact === 'signature' ? 'is-hit' : ''}`}>
-      <img src={ENEMY_ART[id]} alt="" draggable={false} />
+    <div className={`ah-enemy-art ah-enemy-art--rival ah-enemy-art--${enemy.heroId} ${impact === 'enemy' || impact === 'signature' ? 'is-hit' : ''}`}>
+      <img src={rival.image} alt="" draggable={false} />
       <span className="ah-enemy-art__screen" aria-hidden="true" />
       <div className="ah-enemy-art__halo" />
       <div className="ah-enemy-art__mark" />
@@ -101,9 +113,16 @@ function EnemyArt({ id, impact }: { id: string; impact: string | null }) {
 }
 
 export default function AnomalyHand() {
-  const game = useAnomalyHand()
+  const archive = usePlayerArchiveCard()
+  const game = useAnomalyHand({
+    mutationEffects: archive.mutations.map(mutation => mutation.effect),
+    onRunStart: archive.arm,
+    onEnemyDefeated: archive.archiveRival,
+  })
   const [rulesOpen, setRulesOpen] = useState(false)
   const [muted, setMuted] = useState(false)
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false)
+  const leaderboard = useArchiveLeaderboard()
 
   const toggleMuted = () => {
     setMuted(value => {
@@ -121,6 +140,10 @@ export default function AnomalyHand() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [rulesOpen])
+
+  useEffect(() => {
+    if (game.phase === 'defeat') void leaderboard.submitRun(String(game.runId), game.score)
+  }, [game.phase, game.runId, game.score, leaderboard])
 
   return (
     <main className="ah-shell">
@@ -146,6 +169,16 @@ export default function AnomalyHand() {
               </div>
               <h1>{t('game.title')}</h1>
               <p>{t('game.selectSubtitle')}</p>
+              {(archive.card || archive.generating || archive.mutations.length > 0) && (
+                <aside className="ah-personal-file" aria-live="polite">
+                  {archive.card ? <img src={archive.card.portraitUrl} alt="" draggable={false} /> : <span className="ah-personal-file__loader" aria-hidden="true" />}
+                  <span>
+                    <small>{t(archive.card ? 'archive.fileReady' : 'archive.fileQueue')}</small>
+                    <b>{archive.card ? archive.card.displayName : t('archive.generating')}</b>
+                    {archive.mutations.length > 0 && <em>{t('archive.mutationActive', { n: archive.mutations.length })} · {archive.mutations[archive.mutations.length - 1]?.title}</em>}
+                  </span>
+                </aside>
+              )}
             </header>
 
             <div className="ah-select__showcase">
@@ -172,7 +205,7 @@ export default function AnomalyHand() {
             </div>
 
             <div className="ah-roster" aria-label={t('game.roster')}>
-              {game.heroes.map((hero, index) => (
+              {game.draftHeroes.map((hero, index) => (
                 <button
                   className={`ah-roster-card ${hero.id === game.heroId ? 'is-selected' : ''}`}
                   type="button"
@@ -198,11 +231,26 @@ export default function AnomalyHand() {
           </section>
         )}
 
+        {game.phase === 'evolution' && (
+          <section className="ah-evolution ah-screen-enter" aria-labelledby="evolution-title">
+            <div className="ah-evolution__field" aria-hidden="true"><i /><i /><i /><i /></div>
+            <div className="ah-evolution__portrait"><HeroArt hero={game.hero} /></div>
+            <p className="ah-kicker">{t('evolution.kicker')}</p>
+            <h2 id="evolution-title">{t('evolution.title')}</h2>
+            <p className="ah-evolution__lead">{t('evolution.lead')}</p>
+            <ol className="ah-evolution__steps">
+              {[1, 2, 3].map(step => <li key={step}><b>{String(step).padStart(2, '0')}</b><span><strong>{t(`evolution.${step}.title`)}</strong><small>{t(`evolution.${step}.body`)}</small></span></li>)}
+            </ol>
+            <div className="ah-evolution__status" aria-live="polite"><Icon name="sequence" size={16} /><span>{archive.generating ? t('archive.fileQueue') : archive.card ? t('archive.fileReady') : t('evolution.status')}</span></div>
+            <button className="ah-button ah-button--primary ah-evolution__continue" type="button" onPointerDown={game.continueRun}>{t('evolution.continue')}</button>
+          </section>
+        )}
+
         {game.phase === 'battle' && (
           <section className="ah-battle ah-screen-enter">
             <header className="ah-battle__header">
               <div>
-                <p className="ah-kicker">{t('game.encounter', { n: game.encounterIndex + 1 })}</p>
+                <p className="ah-kicker">{t('game.round', { n: game.round })} · {t('game.encounter', { n: game.encounterIndex + 1 })}</p>
                 <strong>{t(game.enemy.nameKey)}</strong>
                 <small>{t(game.enemy.subtitleKey)}</small>
               </div>
@@ -240,7 +288,7 @@ export default function AnomalyHand() {
                 <IntentBadge intent={game.intent} />
                 <span className="ah-stage__file-label"><b>{t('game.enemyRole')}</b>{t('game.enemyFile')}</span>
                 <div className="ah-stage__enemy-card">
-                  <EnemyArt id={game.enemy.id} impact={game.impact} />
+                  <EnemyArt enemy={game.enemy} impact={game.impact} />
                   <div className="ah-stage__enemy-label">
                     <small>{t(game.enemy.subtitleKey)}</small>
                     <strong>{t(game.enemy.nameKey)}</strong>
@@ -346,24 +394,41 @@ export default function AnomalyHand() {
           </section>
         )}
 
-        {(game.phase === 'victory' || game.phase === 'defeat') && (
+        {game.phase === 'defeat' && (
           <section className={`ah-result ah-result--${game.phase}`}>
             <p className="ah-kicker">{t('game.caseStatus')}</p>
             <div className="ah-result__hero"><HeroArt hero={game.hero} /></div>
             <div className="ah-result__stamp">
-              {t(game.phase === 'victory' ? 'game.victoryStamp' : 'game.defeatStamp')}
+              {t('game.defeatStamp')}
             </div>
-            <h2>{t(game.phase === 'victory' ? 'game.victoryTitle' : 'game.defeatTitle')}</h2>
+            <h2>{t('game.defeatTitle')}</h2>
             <p>{t('game.resultSummary', { name: game.hero.name, turns: game.totalTurns, signatures: game.signatureUses })}</p>
             <dl>
-              <div><dt>{t('game.encounterReached')}</dt><dd>{game.encounterIndex + 1}/3</dd></div>
-              <div><dt>{t('game.remainingHp')}</dt><dd>{game.playerHp}/30</dd></div>
+              <div><dt>{t('game.score')}</dt><dd>{game.score}</dd></div>
+              <div><dt>{t('game.round')}</dt><dd>{game.round}</dd></div>
+              <div><dt>{t('game.encounterReached')}</dt><dd>{game.totalEncounters}</dd></div>
+              <div><dt>{t('game.streak', { n: game.maxStreak })}</dt><dd>×{game.maxStreak}</dd></div>
             </dl>
             <div className="ah-result__actions">
               <button className="ah-button ah-button--primary" type="button" onPointerDown={game.restart}>{t('game.restart')}</button>
               <button className="ah-button ah-button--secondary" type="button" onPointerDown={game.changeHero}>{t('game.changeHero')}</button>
+              {leaderboard.canRank && <button className="ah-button ah-button--secondary" type="button" onPointerDown={() => { setLeaderboardOpen(true); void leaderboard.refresh() }}>{t('game.leaderboard')}</button>}
             </div>
           </section>
+        )}
+
+        {leaderboardOpen && (
+          <div className="ah-leaderboard" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title" onPointerDown={event => { if (event.target === event.currentTarget) setLeaderboardOpen(false) }}>
+            <section className="ah-leaderboard__panel">
+              <button className="ah-modal__close" type="button" aria-label={t('game.closeRules')} onPointerDown={() => setLeaderboardOpen(false)}><Icon name="close" /></button>
+              <p className="ah-kicker">{t('game.fieldFile')}</p><h2 id="leaderboard-title">{t('game.leaderboard')}</h2>
+              {leaderboard.loading ? <p className="ah-leaderboard__state">{t('game.loading')}</p> : leaderboard.entries.length === 0 ? <p className="ah-leaderboard__state">{t('game.emptyLeaderboard')}</p> : <ol>
+                {leaderboard.entries.map(entry => <li className={entry.isMe ? 'is-me' : ''} key={entry.userId}>
+                  <b>{String(entry.rank).padStart(2, '0')}</b><button type="button" onClick={() => !entry.isMe && openAigramProfile(entry.userId)} disabled={entry.isMe}><span className="ah-leaderboard__avatar">{entry.avatarUrl ? <img src={entry.avatarUrl} alt="" draggable={false} /> : entry.name.slice(0, 1)}</span><strong>{entry.isMe ? t('game.you') : entry.name}</strong></button><em>{entry.score.toLocaleString()}</em>
+                </li>)}
+              </ol>}
+            </section>
+          </div>
         )}
 
         {rulesOpen && (

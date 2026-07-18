@@ -1,4 +1,4 @@
-export type Phase = 'select' | 'battle' | 'reward' | 'victory' | 'defeat'
+export type Phase = 'select' | 'evolution' | 'battle' | 'reward' | 'victory' | 'defeat'
 export type CardKind = 'breach' | 'guard' | 'tech' | 'signature'
 export type IntentKind = 'attack' | 'guard' | 'charge'
 
@@ -30,6 +30,7 @@ export type Intent = {
 
 export type Enemy = {
   id: string
+  heroId: HeroId
   nameKey: string
   subtitleKey: string
   maxHp: number

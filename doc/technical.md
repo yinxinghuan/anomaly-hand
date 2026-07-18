@@ -7,7 +7,8 @@
 - Vite 5 构建，`base: './'`，生产输出位于 `dist/`，资源路径可在任意部署子目录运行。
 - Web Audio API 合成纸张、机械定位、命中、护盾、受伤、签名技、评级、发牌和结算多层音效；首次用户操作后才创建 `AudioContext`，压缩器限制峰值。
 - 8 位英雄各使用独立透明 WebP；人物由 Aigram transit raster 流程生成，卡框和套印系统由 CSS/SVG 绘制。
-- 3 位敌人与战斗档案底板使用独立 WebP；制作请求记录在 `_artifacts/interface/generation-log.json`。
+- 未选英雄复用统一透明 WebP 并以敌对档案筛网进入战斗；6 张基础行动牌使用本地 SVG 象征物插图。
+- `src/shared/` 提供存档、头像生图、模型异变和按永久游戏 UUID 分区的平台排行榜请求。
 - 轻量 `i18n` 模块支持中文与英文，通过 `localStorage.game_locale` 覆盖或浏览器语言自动检测。
 
 ## 2. 目录结构
@@ -54,7 +55,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 使用 React state 管理 `select → battle → reward → victory/defeat`。每场开始按敌人的固定四步 pattern 生成公开意图；玩家出牌后先结算伤害、格挡、暴露、校准、英雄被动与序列。`turnOwner` 区分 `enemy → handoff → player` 三种常驻控制权；`battleEntry` 进一步区分 `briefing → enemy → hero → ready`。遭遇进入由 `beginEncounter()` 统一调度：先显示敌人识别标题，再依次触发敌方和行动员档案的飞入，最后展示“你的回合”并解锁输入。`playCard()` 与键盘 `1/2/3` 都要求 `battleEntry === 'ready'`，卡牌本身同时使用 `disabled` 和锁定容器，防止灰态仍能出牌。`chapter` 负责大章节说明，包含 `closing` 状态：它以 240 ms 进入、完整停留到指定时长、再用 260 ms 退出，修复了旧 CSS 固定 860 ms 动画会提前把长章节变透明的问题。`showFeedback` 先写入 `effect` 阶段，680 ms 后切为 `value` 阶段，合计保持 2,020 ms；每条 `CombatFeedback` 同时携带 `effectKey`、`amountKey` 和 `amountPolarity`，因此先渲染“攻击命中”等效果，再渲染“敌人生命 −6 / 你的格挡 +6”等明确结果，而不让红青颜色承担正负含义。敌方章节从出牌后 2,420 ms 才启动，保证数值结算完整结束后再切换。`enemyActing` 在敌方章节完整退场后才让敌方在战场中可见地前冲、闪烁和执行。敌人回应在出牌约 4,000 ms 后结算，并在约 640 ms 后开始发牌；玩家章节完整读完后才开放输入。`charged` 同时驱动下一次攻击加值和“蓄力锁定 +5”状态标记；治疗令 `playerState` 回到正常角色图。`playedCardId`、`turnMotion` 与 `handDealId` 把一次回合拆为翻牌、接触、退出和逐张发牌；`feedback`、`score`、`streak` 输出评级、数值与连段。所有定时器记录在 `timers` 中并在卸载或返回英雄选择时清理。
+`useAnomalyHand.ts` 管理 `select → evolution → battle → reward → defeat`。选择页每次只发出 3 张随机行动员档案；确认后进入可停留的“活体档案”说明页，再开始首场。每一轮由 7 名未选行动员组成，`createRivalEncounterRoster(player, round)` 随机排序并按轮次提高生命和攻击；第 7 场显示 2,400 ms 的轮次封存章，随后进入下一轮，生命归零才是唯一结算。`turnOwner`、`battleEntry`、`chapter`、`feedback`、`playedCardId` 与 `handDealId` 维持战斗节奏；`round`、`totalEncounters`、`maxStreak`、`runId` 支持无尽挑战和一次性分数上报。
 
 ### 卡牌与序列
 
@@ -91,6 +92,10 @@ anomaly-hand/
 ### 多语言
 
 `i18n/index.ts` 在模块初始化时读取 `localStorage.game_locale`，未覆盖时依据 `navigator.language` 选择 `zh` 或 `en`。所有界面、卡牌、英雄能力、敌人和奖励文案通过 `t(key, vars)` 输出；切换语言后刷新即可生效。
+
+### 个人档案、异变与排行榜
+
+`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`，生成中存档防重、4 分钟恢复窗口、3 分钟失败冷却与 210 秒超时均不阻塞对局；4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
 
 ## 4. 扩展点
 

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { BASE_CARDS, ENEMIES, HEROES, REWARDS } from './data'
+import { BASE_CARDS, createRivalEncounterRoster, HEROES, REWARDS } from './data'
 import { sound } from './audio'
 import { t } from './i18n'
-import type { ActionCard, CardKind, CombatFeedback, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
+import type { ActionCard, CardKind, CombatFeedback, Enemy, Hero, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
+import type { MutationEffect } from './usePlayerArchiveCard'
 
 const MAX_HP = 30
 const CHAPTER_DURATION = {
@@ -17,6 +18,9 @@ const COMBAT_FEEDBACK_EFFECT_HOLD = 680
 const COMBAT_FEEDBACK_DURATION = 2020
 const ENEMY_CHAPTER_DELAY = 2420
 const PLAYER_RESULT_HOLD = 2120
+const ENCOUNTER_HEAL = 4
+const REWARD_ENCOUNTERS = new Set([0, 2, 4])
+const CYCLE_SEAL_DURATION = 2400
 const ENCOUNTER_ENTRY = {
   enemyDeploy: CHAPTER_DURATION.intro + 80,
   heroDeploy: CHAPTER_DURATION.intro + 900,
@@ -51,13 +55,25 @@ function makeHand(sequence: number, heroId: HeroId) {
   return cards
 }
 
-export function useAnomalyHand() {
+type AnomalyHandOptions = {
+  mutationEffects?: MutationEffect[]
+  onRunStart?: () => void
+  onEnemyDefeated?: (rivalId: string) => void
+}
+
+export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeated }: AnomalyHandOptions = {}) {
   const [phase, setPhase] = useState<Phase>('select')
-  const [heroId, setHeroId] = useState<HeroId>('las')
+  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, 3))
+  const [heroId, setHeroId] = useState<HeroId>(() => draftHeroes[0].id)
+  const [encounters, setEncounters] = useState<Enemy[]>(() => createRivalEncounterRoster('las'))
   const [encounterIndex, setEncounterIndex] = useState(0)
+  const [round, setRound] = useState(1)
+  const [totalEncounters, setTotalEncounters] = useState(0)
+  const [maxStreak, setMaxStreak] = useState(0)
+  const [runId, setRunId] = useState(0)
   const [playerHp, setPlayerHp] = useState(MAX_HP)
   const [playerBlock, setPlayerBlock] = useState(0)
-  const [enemyHp, setEnemyHp] = useState(ENEMIES[0].maxHp)
+  const [enemyHp, setEnemyHp] = useState(() => encounters[0].maxHp)
   const [enemyBlock, setEnemyBlock] = useState(0)
   const [intentStep, setIntentStep] = useState(0)
   const [charged, setCharged] = useState(false)
@@ -69,6 +85,9 @@ export function useAnomalyHand() {
   const [smithFury, setSmithFury] = useState(false)
   const [isabelRecoveryUsed, setIsabelRecoveryUsed] = useState(false)
   const [getuMomentum, setGetuMomentum] = useState(false)
+  const [mutationTechUsed, setMutationTechUsed] = useState(false)
+  const [mutationRecoveryUsed, setMutationRecoveryUsed] = useState(false)
+  const [activeMutationEffects, setActiveMutationEffects] = useState<MutationEffect[]>([])
   const [hand, setHand] = useState<ActionCard[]>(makeHand(0, 'las'))
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(t('message.select'))
@@ -94,7 +113,7 @@ export function useAnomalyHand() {
   const chapterId = useRef(0)
 
   const hero = useMemo(() => HEROES.find(item => item.id === heroId)!, [heroId])
-  const enemy = ENEMIES[encounterIndex]
+  const enemy = encounters[encounterIndex] ?? encounters[0]
   const intent = useMemo<Intent>(() => {
     const kind = enemy.pattern[intentStep % enemy.pattern.length]
     return {
@@ -130,7 +149,7 @@ export function useAnomalyHand() {
     sound.deal()
   }, [])
 
-  const beginEncounter = useCallback((nextEnemy: typeof ENEMIES[number], encounterNumber: number) => {
+  const beginEncounter = useCallback((nextEnemy: Enemy, encounterNumber: number) => {
     setBattleEntry('briefing')
     setBusy(true)
     setTurnOwner('handoff')
@@ -181,11 +200,18 @@ export function useAnomalyHand() {
 
   const startRun = useCallback(() => {
     const startSequence = 0
-    setPhase('battle')
+    const nextEncounters = createRivalEncounterRoster(heroId, 1)
+    const firstEnemy = nextEncounters[0]
+    setPhase('evolution')
+    setEncounters(nextEncounters)
     setEncounterIndex(0)
+    setRound(1)
+    setTotalEncounters(0)
+    setMaxStreak(0)
+    setRunId(value => value + 1)
     setPlayerHp(MAX_HP)
     setPlayerBlock(0)
-    setEnemyHp(ENEMIES[0].maxHp)
+    setEnemyHp(firstEnemy.maxHp)
     setEnemyBlock(0)
     setIntentStep(0)
     setCharged(false)
@@ -197,6 +223,9 @@ export function useAnomalyHand() {
     setSmithFury(false)
     setIsabelRecoveryUsed(false)
     setGetuMomentum(false)
+    setMutationTechUsed(false)
+    setMutationRecoveryUsed(false)
+    setActiveMutationEffects(mutationEffects)
     dealHand(startSequence, heroId)
     setUpgrades(DEFAULT_UPGRADES)
     setTotalTurns(0)
@@ -208,8 +237,39 @@ export function useAnomalyHand() {
     setTurnMotion('idle')
     setSelectedRewardId(null)
     sound.select()
-    beginEncounter(ENEMIES[0], 1)
-  }, [beginEncounter, dealHand, heroId])
+    onRunStart?.()
+  }, [dealHand, heroId, mutationEffects, onRunStart])
+
+  const continueRun = useCallback(() => {
+    const firstEnemy = encounters[0]
+    if (!firstEnemy || phase !== 'evolution') return
+    setPhase('battle')
+    beginEncounter(firstEnemy, 1)
+  }, [beginEncounter, encounters, phase])
+
+  const prepareEncounter = useCallback((nextIndex: number, startSequence: number) => {
+    const nextEnemy = encounters[nextIndex]
+    if (!nextEnemy) return
+    setEncounterIndex(nextIndex)
+    setEnemyHp(nextEnemy.maxHp)
+    setEnemyBlock(0)
+    setPlayerBlock(0)
+    setIntentStep(0)
+    setCharged(false)
+    setExposed(0)
+    setCalibrated(false)
+    setSequence(startSequence)
+    setLastKind(null)
+    setFirstTechUsed(false)
+    setSmithFury(false)
+    setIsabelRecoveryUsed(false)
+    setGetuMomentum(false)
+    setMutationTechUsed(false)
+    setMutationRecoveryUsed(false)
+    dealHand(startSequence, heroId)
+    setPhase('battle')
+    beginEncounter(nextEnemy, nextIndex + 1)
+  }, [beginEncounter, dealHand, encounters, heroId])
 
   const resolveEnemy = useCallback((
     nextPlayerBlock: number,
@@ -241,6 +301,10 @@ export function useAnomalyHand() {
       if (intent.kind === 'attack') {
         const damage = Math.max(0, intent.value - nextPlayerBlock)
         resultingHp = Math.max(0, currentPlayerHp - damage)
+        if (damage > 0 && activeMutationEffects.includes('recoveryProtocol') && !mutationRecoveryUsed) {
+          resultingHp = Math.min(MAX_HP, resultingHp + 3)
+          setMutationRecoveryUsed(true)
+        }
         setPlayerHp(resultingHp)
         setPlayerBlock(0)
         setCharged(false)
@@ -254,7 +318,11 @@ export function useAnomalyHand() {
         } else {
           setMessage(t('message.blocked'))
           sound.guard(true)
-          setStreak(value => value + 1)
+          setStreak(value => {
+            const next = value + 1
+            setMaxStreak(current => Math.max(current, next))
+            return next
+          })
           setScore(value => value + 90)
           showFeedback({ target: 'hero', kind: 'perfect', value: 0, rating: 'A', scoreDelta: 90, effectKey: 'feedback.effect.perfect', labelKey: 'rating.held' })
         }
@@ -266,7 +334,7 @@ export function useAnomalyHand() {
         showFeedback({ target: 'enemy', kind: 'block', value: intent.value, amountKey: 'feedback.enemyBlock', amountPolarity: 'gain', effectKey: 'feedback.effect.enemyGuard', labelKey: 'rating.enemyGuard' })
       } else {
         setCharged(true)
-        setPlayerBlock(heroId === 'goat' ? 3 : 0)
+        setPlayerBlock(Math.max(heroId === 'goat' ? 3 : 0, activeMutationEffects.includes('chargeShield') ? 4 : 0))
         if (heroId === 'kibo') {
           nextSequence = Math.min(3, nextSequence + 1)
           setSequence(nextSequence)
@@ -319,27 +387,62 @@ export function useAnomalyHand() {
         }, CHAPTER_DURATION.turn)
       }, PLAYER_RESULT_HOLD)
     }, ENEMY_CHAPTER_DELAY + CHAPTER_DURATION.hostile + 220)
-  }, [dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, showChapter, showFeedback])
+  }, [activeMutationEffects, dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, mutationRecoveryUsed, showChapter, showFeedback])
 
   const finishEncounter = useCallback(() => {
     setImpact(null)
     setTurnMotion('discard')
-    if (encounterIndex === ENEMIES.length - 1) {
+    setTotalEncounters(value => value + 1)
+    onEnemyDefeated?.(`${round}-${encounterIndex + 1}-${enemy.heroId}`)
+    if (encounterIndex === encounters.length - 1) {
+      const nextRound = round + 1
+      const nextEncounters = createRivalEncounterRoster(heroId, nextRound)
+      const nextEnemy = nextEncounters[0]
       sound.win()
       showChapter({
-        kicker: t('game.caseStatus'),
-        title: t('chapter.victory'),
-        detail: t('chapter.victoryDetail'),
+        kicker: t('game.round', { n: round }),
+        title: t('chapter.cycleSealed'),
+        detail: t('chapter.cycleSealedDetail', { n: nextRound }),
         tone: 'brass',
-      }, CHAPTER_DURATION.result)
+      }, CYCLE_SEAL_DURATION)
       later(() => {
-        setPhase('victory')
-        setBusy(false)
-      }, CHAPTER_DURATION.result)
+        setRound(nextRound)
+        setEncounters(nextEncounters)
+        setEncounterIndex(0)
+        setEnemyHp(nextEnemy.maxHp)
+        setEnemyBlock(0)
+        setPlayerBlock(0)
+        setIntentStep(0)
+        setCharged(false)
+        setExposed(0)
+        setCalibrated(false)
+        setSequence(upgrades.startSequence)
+        setLastKind(null)
+        setFirstTechUsed(false)
+        setSmithFury(false)
+        setIsabelRecoveryUsed(false)
+        setGetuMomentum(false)
+        setMutationTechUsed(false)
+        setMutationRecoveryUsed(false)
+        dealHand(upgrades.startSequence, heroId)
+        beginEncounter(nextEnemy, 1)
+      }, CYCLE_SEAL_DURATION)
       return
     }
-    setPlayerHp(value => Math.min(MAX_HP, value + 6 + upgrades.extraHeal))
+    setPlayerHp(value => Math.min(MAX_HP, value + ENCOUNTER_HEAL + upgrades.extraHeal))
     setPlayerState('ready')
+    if (!REWARD_ENCOUNTERS.has(encounterIndex)) {
+      showChapter({
+        kicker: t('game.caseStatus'),
+        title: t('chapter.fileSealed'),
+        detail: t('chapter.fileSealedDetail'),
+        tone: 'brass',
+      }, CHAPTER_DURATION.archive)
+      later(() => {
+        prepareEncounter(encounterIndex + 1, upgrades.startSequence)
+      }, CHAPTER_DURATION.archive)
+      return
+    }
     setRewardOptions(sample(REWARDS, 3))
     setSelectedRewardId(null)
     showChapter({
@@ -352,7 +455,7 @@ export function useAnomalyHand() {
       setPhase('reward')
       setBusy(false)
     }, CHAPTER_DURATION.archive)
-  }, [encounterIndex, later, showChapter, upgrades.extraHeal])
+  }, [beginEncounter, dealHand, encounterIndex, encounters.length, enemy.heroId, heroId, later, onEnemyDefeated, prepareEncounter, round, showChapter, upgrades.extraHeal, upgrades.startSequence])
 
   const playCard = useCallback((cardId: string) => {
     if (busy || battleEntry !== 'ready' || phase !== 'battle') return
@@ -455,6 +558,8 @@ export function useAnomalyHand() {
       block += 4
       setIsabelRecoveryUsed(true)
     }
+    if (card.kind === 'breach' && activeMutationEffects.includes('breachBoost')) damage += 2
+    if (card.kind === 'guard' && activeMutationEffects.includes('guardBoost')) block += 2
 
     const absorbed = Math.min(nextEnemyBlock, damage)
     const dealt = Math.max(0, damage - absorbed)
@@ -479,6 +584,10 @@ export function useAnomalyHand() {
       if (heroId === 'las' && card.kind === 'tech' && !firstTechUsed) {
         nextSequence = Math.min(3, nextSequence + 1)
         setFirstTechUsed(true)
+      }
+      if (card.kind === 'tech' && activeMutationEffects.includes('techSequence') && !mutationTechUsed) {
+        nextSequence = Math.min(3, nextSequence + 1)
+        setMutationTechUsed(true)
       }
       setLastKind(card.kind)
     }
@@ -524,6 +633,7 @@ export function useAnomalyHand() {
     const nextStreak = rating === 'A' || rating === 'S' ? streak + 1 : rating === 'C' ? 0 : streak
     const scoreDelta = Math.round(baseScore * (1 + Math.min(streak, 4) * 0.15))
     setStreak(nextStreak)
+    setMaxStreak(current => Math.max(current, nextStreak))
     setScore(value => value + scoreDelta)
 
     later(() => {
@@ -593,6 +703,7 @@ export function useAnomalyHand() {
     }, card.kind === 'signature' ? 1650 : 1450)
     resolveEnemy(block, nextEnemyHp, nextSequence, nextPlayerHp)
   }, [
+    activeMutationEffects,
     battleEntry,
     busy,
     calibrated,
@@ -608,6 +719,7 @@ export function useAnomalyHand() {
     isabelRecoveryUsed,
     lastKind,
     later,
+    mutationTechUsed,
     phase,
     playerBlock,
     playerHp,
@@ -633,32 +745,15 @@ export function useAnomalyHand() {
     }))
     later(() => {
       const nextIndex = encounterIndex + 1
-      const nextEnemy = ENEMIES[nextIndex]
       const startSequence = id === 'startSequence'
         ? Math.min(3, upgrades.startSequence + 1)
         : upgrades.startSequence
-      setEncounterIndex(nextIndex)
-      setEnemyHp(nextEnemy.maxHp)
-      setEnemyBlock(0)
-      setPlayerBlock(0)
-      setIntentStep(0)
-      setCharged(false)
-      setExposed(0)
-      setCalibrated(false)
-      setSequence(startSequence)
-      setLastKind(null)
-      setFirstTechUsed(false)
-      setSmithFury(false)
-      setIsabelRecoveryUsed(false)
-      setGetuMomentum(false)
-      dealHand(startSequence, heroId)
-      setPhase('battle')
-      beginEncounter(nextEnemy, nextIndex + 1)
+      prepareEncounter(nextIndex, startSequence)
       later(() => {
         setSelectedRewardId(null)
       }, ENCOUNTER_ENTRY.unlock)
     }, 620)
-  }, [beginEncounter, busy, dealHand, encounterIndex, heroId, later, upgrades.startSequence])
+  }, [busy, encounterIndex, later, prepareEncounter, upgrades.startSequence])
 
   const changeHero = useCallback(() => {
     timers.current.forEach(window.clearTimeout)
@@ -675,6 +770,9 @@ export function useAnomalyHand() {
     setFeedback(null)
     setChapter(null)
     setMessage(t('message.select'))
+    const nextDraft = sample(HEROES, 3)
+    setDraftHeroes(nextDraft)
+    setHeroId(nextDraft[0].id)
   }, [])
 
   const restart = useCallback(() => {
@@ -697,8 +795,14 @@ export function useAnomalyHand() {
     hero,
     heroId,
     heroes: HEROES,
+    draftHeroes,
     enemy,
     encounterIndex,
+    encounterCount: encounters.length,
+    round,
+    totalEncounters,
+    maxStreak,
+    runId,
     playerHp,
     playerBlock,
     enemyHp,
@@ -729,6 +833,7 @@ export function useAnomalyHand() {
     upgrades,
     selectHero,
     startRun,
+    continueRun,
     playCard,
     chooseReward,
     restart,
