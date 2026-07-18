@@ -1553,11 +1553,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &::before {
-    inset: 3px -18px;
-    border-block: 1px solid fade(@paper, 56%);
-    background:
-      linear-gradient(90deg, @red 0 32px, transparent 32px calc(100% - 32px), @cyan calc(100% - 32px));
-    opacity: 1;
+    display: none;
   }
 
   &::after {
@@ -1579,21 +1575,29 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     z-index: -2;
     inset: -54px -58px;
     pointer-events: none;
+    color: @cyan;
 
-    i {
-      position: absolute;
-      width: 17px;
-      height: 112px;
-      background: @cyan;
-      clip-path: polygon(54% 0, 100% 0, 64% 38%, 96% 38%, 21% 100%, 42% 54%, 8% 54%);
-      filter: drop-shadow(0 0 5px fade(@cyan, 90%)) drop-shadow(0 0 14px fade(@cyan, 64%));
-      opacity: 0;
-      animation: ah-callout-lightning 620ms steps(1, end) both;
+    svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
     }
 
-    i:nth-child(1) { top: 2px; left: 7%; transform: rotate(-19deg) scale(.92); }
-    i:nth-child(2) { top: 25px; right: 8%; transform: rotate(18deg) scale(.76); animation-delay: 70ms; }
-    i:nth-child(3) { right: 28%; bottom: -4px; transform: rotate(172deg) scale(.68); animation-delay: 120ms; }
+    path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      stroke-linejoin: bevel;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 12px currentColor);
+      opacity: 0;
+      animation: ah-callout-bolt-draw 620ms cubic-bezier(.13, .78, .22, 1) both;
+    }
+
+    path:nth-child(2) { animation-delay: 72ms; stroke-width: 3.4; }
+    path:nth-child(3) { animation-delay: 130ms; stroke-width: 3; }
   }
 
   &__effect {
@@ -1685,8 +1689,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &[data-stage="value"] {
-    .ah-combat-callout__lightning i {
-      animation: ah-callout-value-lightning 460ms steps(1, end) both;
+    .ah-combat-callout__lightning path {
+      animation: ah-callout-value-bolt 460ms cubic-bezier(.13, .78, .22, 1) both;
     }
 
     .ah-combat-callout__effect {
@@ -1727,19 +1731,13 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
   &--damage,
   &--hurt {
-    .ah-combat-callout__lightning i {
-      background: @red;
-      filter: drop-shadow(0 0 5px fade(@red, 92%)) drop-shadow(0 0 14px fade(@red, 68%));
-    }
+    .ah-combat-callout__lightning { color: @red; }
   }
 
   &--heal,
   &--block,
   &--perfect {
-    .ah-combat-callout__lightning i {
-      background: @mint;
-      filter: drop-shadow(0 0 5px fade(@mint, 92%)) drop-shadow(0 0 14px fade(@mint, 68%));
-    }
+    .ah-combat-callout__lightning { color: @mint; }
   }
 }
 
@@ -2947,18 +2945,20 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   100% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes ah-callout-lightning {
-  0%, 18% { opacity: 0; }
-  19%, 28% { opacity: 1; }
-  29%, 43% { opacity: 0; }
-  44%, 52% { opacity: 1; }
-  53%, 100% { opacity: 0; }
+@keyframes ah-callout-bolt-draw {
+  0% { opacity: 0; stroke-dashoffset: 100; }
+  9% { opacity: 1; stroke-dashoffset: 100; }
+  29% { opacity: 1; stroke-dashoffset: 0; }
+  76% { opacity: 1; stroke-dashoffset: -5; }
+  100% { opacity: 0; stroke-dashoffset: -20; }
 }
 
-@keyframes ah-callout-value-lightning {
-  0%, 20% { opacity: 0; }
-  21%, 32% { opacity: 1; }
-  33%, 100% { opacity: 0; }
+@keyframes ah-callout-value-bolt {
+  0% { opacity: 0; stroke-dashoffset: 100; }
+  12% { opacity: 1; stroke-dashoffset: 100; }
+  42% { opacity: 1; stroke-dashoffset: 0; }
+  82% { opacity: 1; stroke-dashoffset: -5; }
+  100% { opacity: 0; stroke-dashoffset: -20; }
 }
 
 @keyframes ah-callout-effect-in {
