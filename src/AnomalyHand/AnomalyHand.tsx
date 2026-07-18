@@ -273,6 +273,8 @@ export default function AnomalyHand() {
             {game.feedback && (
               <div className="ah-battle__resolution" aria-live="polite">
                 <div className={`ah-combat-callout ah-combat-callout--${game.feedback.target} ah-combat-callout--${game.feedback.kind}`} data-stage={game.feedback.stage} key={game.feedback.id}>
+                  <div className="ah-combat-callout__aura" aria-hidden="true" />
+                  <div className="ah-combat-callout__lightning" aria-hidden="true"><i /><i /><i /></div>
                   <div className="ah-combat-callout__effect">
                     {game.feedback.rating && <strong>{game.feedback.rating}</strong>}
                     <b>{t(game.feedback.effectKey)}</b>

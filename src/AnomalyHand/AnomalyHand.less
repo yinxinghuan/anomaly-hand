@@ -1564,6 +1564,38 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     display: none;
   }
 
+  &__aura {
+    position: absolute;
+    z-index: -3;
+    inset: -72px -92px;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 52%, fade(#000, 84%) 0 22%, fade(#000, 58%) 43%, transparent 74%);
+    filter: blur(10px);
+    animation: ah-callout-aura 340ms cubic-bezier(.1, .8, .16, 1) both;
+  }
+
+  &__lightning {
+    position: absolute;
+    z-index: -2;
+    inset: -54px -58px;
+    pointer-events: none;
+
+    i {
+      position: absolute;
+      width: 17px;
+      height: 112px;
+      background: @cyan;
+      clip-path: polygon(54% 0, 100% 0, 64% 38%, 96% 38%, 21% 100%, 42% 54%, 8% 54%);
+      filter: drop-shadow(0 0 5px fade(@cyan, 90%)) drop-shadow(0 0 14px fade(@cyan, 64%));
+      opacity: 0;
+      animation: ah-callout-lightning 620ms steps(1, end) both;
+    }
+
+    i:nth-child(1) { top: 2px; left: 7%; transform: rotate(-19deg) scale(.92); }
+    i:nth-child(2) { top: 25px; right: 8%; transform: rotate(18deg) scale(.76); animation-delay: 70ms; }
+    i:nth-child(3) { right: 28%; bottom: -4px; transform: rotate(172deg) scale(.68); animation-delay: 120ms; }
+  }
+
   &__effect {
     display: grid;
     justify-items: center;
@@ -1653,6 +1685,10 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &[data-stage="value"] {
+    .ah-combat-callout__lightning i {
+      animation: ah-callout-value-lightning 460ms steps(1, end) both;
+    }
+
     .ah-combat-callout__effect {
       padding: 3px 16px 8px;
       animation: ah-callout-effect-settle 220ms cubic-bezier(.18, .82, .2, 1) both;
@@ -1688,6 +1724,23 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   &--hurt { color: @red; }
   &--perfect { color: @mint; }
   &--signature { color: @cyan; }
+
+  &--damage,
+  &--hurt {
+    .ah-combat-callout__lightning i {
+      background: @red;
+      filter: drop-shadow(0 0 5px fade(@red, 92%)) drop-shadow(0 0 14px fade(@red, 68%));
+    }
+  }
+
+  &--heal,
+  &--block,
+  &--perfect {
+    .ah-combat-callout__lightning i {
+      background: @mint;
+      filter: drop-shadow(0 0 5px fade(@mint, 92%)) drop-shadow(0 0 14px fade(@mint, 68%));
+    }
+  }
 }
 
 .ah-hand {
@@ -2887,6 +2940,25 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   0% { opacity: 0; transform: translate(-50%, -48%) scale(.86); }
   62% { opacity: 1; transform: translate(-50%, -51%) scale(1.03); }
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes ah-callout-aura {
+  0% { opacity: 0; transform: scale(.62); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ah-callout-lightning {
+  0%, 18% { opacity: 0; }
+  19%, 28% { opacity: 1; }
+  29%, 43% { opacity: 0; }
+  44%, 52% { opacity: 1; }
+  53%, 100% { opacity: 0; }
+}
+
+@keyframes ah-callout-value-lightning {
+  0%, 20% { opacity: 0; }
+  21%, 32% { opacity: 1; }
+  33%, 100% { opacity: 0; }
 }
 
 @keyframes ah-callout-effect-in {
