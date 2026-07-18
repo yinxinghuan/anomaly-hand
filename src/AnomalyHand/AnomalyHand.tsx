@@ -27,9 +27,11 @@ function HeroArt({ hero, compact = false, hurt = false }: { hero: Hero; compact?
   return (
     <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'} ${hurt ? 'is-hurt' : ''}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
       <span className="ah-hero-art__print" aria-hidden="true" />
+      <span className="ah-hero-art__orbit" aria-hidden="true" />
       <img src={hurt ? hero.hurtImage : hero.image} alt="" draggable={false} />
       <span className="ah-hero-art__frame" aria-hidden="true" />
       <span className="ah-hero-art__icons" aria-hidden="true" />
+      <span className="ah-hero-art__catalog" aria-hidden="true" />
     </div>
   )
 }
@@ -91,6 +93,7 @@ function EnemyArt({ id, impact }: { id: string; impact: string | null }) {
   return (
     <div className={`ah-enemy-art ah-enemy-art--${id} ${impact === 'enemy' || impact === 'signature' ? 'is-hit' : ''}`}>
       <img src={ENEMY_ART[id]} alt="" draggable={false} />
+      <span className="ah-enemy-art__screen" aria-hidden="true" />
       <div className="ah-enemy-art__halo" />
       <div className="ah-enemy-art__mark" />
     </div>
@@ -214,6 +217,8 @@ export default function AnomalyHand() {
             </header>
 
               <div className={`ah-stage ah-stage--${game.turnMotion} ah-stage--entry-${game.battleEntry} ${game.enemyActing ? 'ah-stage--enemy-action' : ''}`}>
+              <div className="ah-stage__atmosphere" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+              <div className="ah-stage__registration" aria-hidden="true"><i /><i /><i /></div>
               <div className="ah-performance" aria-live="polite">
                 <small>{t('game.score')}</small>
                 <strong>{game.score}</strong>
@@ -223,8 +228,18 @@ export default function AnomalyHand() {
                 <div className={`ah-combat-callout ah-combat-callout--${game.feedback.target} ah-combat-callout--${game.feedback.kind}`} key={game.feedback.id}>
                   {game.feedback.rating && <strong>{game.feedback.rating}</strong>}
                   <b>{t(game.feedback.labelKey)}</b>
-                  {game.feedback.scoreDelta != null && <small>+{game.feedback.scoreDelta}</small>}
-                  {game.feedback.value > 0 && <em>{game.feedback.kind === 'hurt' ? '−' : '+'}{game.feedback.value}</em>}
+                  {game.feedback.scoreDelta != null && <small className="ah-combat-callout__score">{t('feedback.tacticalScore')} +{game.feedback.scoreDelta}</small>}
+                  {game.feedback.value > 0 && game.feedback.amountKey && (
+                    <span className={`ah-combat-callout__amount ah-combat-callout__amount--${game.feedback.amountPolarity ?? 'gain'}`}>
+                      <small>{t(game.feedback.amountKey)}</small>
+                      <b>{game.feedback.amountPolarity === 'loss' ? '−' : '+'}{game.feedback.value}</b>
+                    </span>
+                  )}
+                </div>
+              )}
+              {game.impact && (
+                <div className={`ah-stage__burst ah-stage__burst--${game.impact}`} aria-hidden="true">
+                  <i /><i /><i /><i /><i /><i /><i /><i />
                 </div>
               )}
               <div className="ah-stage__impact-lines" aria-hidden="true"><i /><i /><i /><i /><i /></div>

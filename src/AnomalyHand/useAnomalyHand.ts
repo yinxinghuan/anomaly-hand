@@ -247,7 +247,7 @@ export function useAnomalyHand() {
           setPlayerState('hurt')
           setMessage(t('message.hurt', { n: damage }))
           sound.hurt()
-          showFeedback({ target: 'hero', kind: 'hurt', value: damage, labelKey: 'rating.breached' })
+          showFeedback({ target: 'hero', kind: 'hurt', value: damage, amountKey: 'feedback.playerHealth', amountPolarity: 'loss', labelKey: 'rating.breached' })
           if (heroId === 'smith') setSmithFury(true)
         } else {
           setMessage(t('message.blocked'))
@@ -261,7 +261,7 @@ export function useAnomalyHand() {
         setPlayerBlock(0)
         setMessage(t('message.enemyGuard', { n: intent.value }))
         sound.guard()
-        showFeedback({ target: 'enemy', kind: 'block', value: intent.value, labelKey: 'rating.enemyGuard' })
+        showFeedback({ target: 'enemy', kind: 'block', value: intent.value, amountKey: 'feedback.enemyBlock', amountPolarity: 'gain', labelKey: 'rating.enemyGuard' })
       } else {
         setCharged(true)
         setPlayerBlock(heroId === 'goat' ? 3 : 0)
@@ -278,7 +278,7 @@ export function useAnomalyHand() {
               : t('message.enemyCharge'),
         )
         sound.ready()
-        showFeedback({ target: 'enemy', kind: 'signature', value: 5, labelKey: 'rating.enemyCharge' })
+        showFeedback({ target: 'enemy', kind: 'signature', value: 5, amountKey: 'feedback.enemyCharge', amountPolarity: 'gain', labelKey: 'rating.enemyCharge' })
       }
 
       if (resultingHp <= 0) {
@@ -528,7 +528,21 @@ export function useAnomalyHand() {
       setTurnMotion('impact')
       if (damage > 0) setImpact(card.kind === 'signature' ? 'signature' : 'enemy')
       const feedbackKind = card.kind === 'signature' ? 'signature' : damage > 0 ? 'damage' : nextPlayerHp > playerHp ? 'heal' : 'block'
-      showFeedback({ target: damage > 0 ? 'enemy' : 'hero', kind: feedbackKind, value: damage > 0 ? dealt : Math.max(0, block - playerBlock), rating, scoreDelta, labelKey })
+      const amountKey = damage > 0
+        ? 'feedback.enemyHealth'
+        : nextPlayerHp > playerHp
+          ? 'feedback.playerHealth'
+          : 'feedback.playerBlock'
+      showFeedback({
+        target: damage > 0 ? 'enemy' : 'hero',
+        kind: feedbackKind,
+        value: damage > 0 ? dealt : Math.max(0, block - playerBlock),
+        amountKey,
+        amountPolarity: damage > 0 ? 'loss' : 'gain',
+        rating,
+        scoreDelta,
+        labelKey,
+      })
       if (damage > 0 && card.kind !== 'signature') sound.hit(rating)
       if (damage === 0 && block > playerBlock) sound.guard(rating === 'A')
       sound.score(rating)

@@ -60,6 +60,8 @@ export type CombatFeedback = {
   target: 'enemy' | 'player' | 'hero'
   kind: 'damage' | 'block' | 'heal' | 'hurt' | 'perfect' | 'signature'
   value: number
+  amountKey?: string
+  amountPolarity?: 'gain' | 'loss'
   rating?: Rating
   scoreDelta?: number
   labelKey: string
