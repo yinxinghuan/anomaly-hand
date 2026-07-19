@@ -1878,20 +1878,16 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   min-width: 0;
   height: clamp(178px, 24.5vh, 218px);
   overflow: hidden;
-  border: 1px solid fade(@paper, 47%);
-  border-radius: 1px;
+  border: 1px solid fade(@paper, 34%);
+  border-radius: 10px;
   padding: 12px 8px 9px;
   display: grid;
   grid-template-rows: 31px auto 1fr;
   align-content: start;
   background:
-    linear-gradient(180deg, fade(@ink, 3%), fade(@ink, 48%) 61%, fade(@ink, 96%) 100%),
-    url("./img/interface/battle-table.webp") 52% 42% / 265% auto,
-    radial-gradient(circle at 50% 34%, transparent 0 22%, fade(@paper, 7%) 22.4% 23%, transparent 23.4%),
-    linear-gradient(145deg, fade(@paper, 8%), transparent 31%),
-    repeating-linear-gradient(0deg, transparent 0 4px, fade(@paper, 4%) 5px),
+    linear-gradient(180deg, transparent 0 42%, fade(@ink, 24%) 54%, fade(@ink, 96%) 74%, @ink 100%),
     @carbon;
-  box-shadow: 4px 4px 0 fade(#000, 60%);
+  box-shadow: 0 9px 18px fade(#000, 52%), 2px 3px 0 fade(@ink, 72%);
   text-align: left;
   cursor: pointer;
   transition: transform 70ms ease, filter 130ms ease, box-shadow 70ms ease;
@@ -1900,26 +1896,6 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   &.is-commit { animation: ah-card-commit 210ms cubic-bezier(.16, .84, .22, 1) both; }
   &.is-impact { animation: ah-card-impact 230ms cubic-bezier(.1, .78, .2, 1) both; }
   &.is-discard { animation: ah-card-exit 220ms ease-in both; }
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    border: 1px solid fade(@paper, 20%);
-    clip-path: polygon(13% 0, 100% 0, 100% 88%, 86% 100%, 0 100%, 0 10%);
-    box-shadow: inset 0 0 0 6px fade(@ink, 13%);
-    pointer-events: none;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    right: -1px;
-    bottom: -1px;
-    width: 25px;
-    height: 25px;
-    background: linear-gradient(135deg, transparent 48%, @ink 50%);
-  }
 
   &:active:not(:disabled) {
     transform: translateY(4px);
@@ -1936,52 +1912,14 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     filter: saturate(.25) contrast(.86);
   }
 
-  &:not(:disabled)::before {
-    animation: ah-card-foil 3600ms ease-in-out infinite;
-  }
-
-  &__registration {
-    position: absolute;
-    top: 7px;
-    right: 7px;
-    width: 18px;
-    height: 18px;
-    border: 1px solid currentColor;
-    opacity: .54;
-
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      background: currentColor;
-    }
-
-    &::before {
-      top: 8px;
-      left: -4px;
-      width: 24px;
-      height: 1px;
-    }
-
-    &::after {
-      top: -4px;
-      left: 8px;
-      width: 1px;
-      height: 24px;
-    }
-  }
-
   &__art {
     position: absolute;
     z-index: 0;
-    left: 50%;
-    top: 28px;
-    width: 132%;
-    height: 91px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    opacity: .9;
-    transform: translateX(-50%);
-    mix-blend-mode: screen;
+    object-position: center top;
     pointer-events: none;
   }
 
@@ -1992,15 +1930,19 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     height: 31px;
     display: grid;
     place-items: center;
-    border: 1px solid currentColor;
-    background: fade(@ink, 40%);
+    border: 1px solid fade(@paper, 45%);
+    border-radius: 5px;
+    background: fade(@ink, 74%);
+    color: @paper;
   }
 
   > strong {
     position: relative;
     z-index: 2;
     align-self: end;
-    margin-top: 8px;
+    margin-top: 7px;
+    padding: 3px 4px 2px;
+    background: linear-gradient(90deg, fade(@ink, 93%), fade(@ink, 75%), transparent);
     font-size: clamp(14px, 4vw, 17px);
     line-height: 1;
   }
@@ -2008,8 +1950,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   > b {
     z-index: 2;
     position: absolute;
-    top: 39px;
+    top: 42px;
     right: 8px;
+    padding: 3px 4px 1px;
+    border-radius: 4px;
+    background: fade(@ink, 82%);
     .ah-number-accent();
     font-size: clamp(27px, 8vw, 37px);
     line-height: .82;
@@ -2021,7 +1966,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     position: relative;
     z-index: 2;
     align-self: end;
-    color: @dust;
+    padding: 3px 4px 2px;
+    background: linear-gradient(90deg, fade(@ink, 94%), fade(@ink, 74%), transparent);
+    color: mix(@paper, @dust, 35%);
     font-size: clamp(12px, 3.15vw, 13px);
     line-height: 1.38;
   }
@@ -2029,32 +1976,16 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   &--breach {
     color: @red;
     border-top: 3px solid @red;
-    background-position: center, 22% 36%, center, center, center, center;
-    background-blend-mode: normal, luminosity, normal, normal, normal, normal;
-
-    &::before {
-      box-shadow: inset 0 38px 0 fade(@red, 8%);
-    }
   }
 
   &--guard {
     color: @mint;
     border-top: 3px solid @mint;
-    background-position: center, 74% 45%, center, center, center, center;
-
-    &::before {
-      box-shadow: inset 0 38px 0 fade(@mint, 8%);
-    }
   }
 
   &--tech {
     color: @cyan;
     border-top: 3px solid @cyan;
-    background-position: center, 52% 67%, center, center, center, center;
-
-    &::before {
-      box-shadow: inset 0 38px 0 fade(@cyan, 9%);
-    }
   }
 
   &--signature {
@@ -2268,42 +2199,19 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   min-width: 0;
   height: clamp(285px, 40vh, 345px);
   overflow: hidden;
-  border: 1px solid fade(@paper, 52%);
+  border: 1px solid fade(@paper, 38%);
   border-top: 4px solid var(--reward-accent);
-  border-radius: 1px;
+  border-radius: 10px;
   padding: 10px 9px 12px;
   display: grid;
-  grid-template-rows: auto 58px auto auto auto 1fr;
+  grid-template-rows: auto 92px auto auto auto 1fr;
   align-content: start;
   gap: 6px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--reward-accent) 8%, transparent), fade(@ink, 47%) 48%, fade(@ink, 95%) 100%),
-    url("./img/interface/battle-table.webp") 43% 50% / 250% auto,
-    @carbon;
-  box-shadow: 4px 4px 0 fade(#000, 66%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--reward-accent) 7%, @carbon), fade(@ink, 94%) 100%);
+  box-shadow: 0 9px 18px fade(#000, 56%), 2px 3px 0 fade(@ink, 72%);
   text-align: left;
   cursor: pointer;
   transition: transform 80ms ease, filter 160ms ease, box-shadow 80ms ease;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 5px;
-    border: 1px solid fade(@paper, 18%);
-    clip-path: polygon(13% 0, 100% 0, 100% 89%, 84% 100%, 0 100%, 0 9%);
-    box-shadow: inset 0 58px 0 color-mix(in srgb, var(--reward-accent) 13%, transparent), inset 0 0 0 6px fade(@ink, 10%);
-    pointer-events: none;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    right: -1px;
-    bottom: -1px;
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, transparent 48%, @ink 50%);
-  }
 
   &:active:not(:disabled) {
     transform: translateY(4px);
@@ -2351,32 +2259,22 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     }
   }
 
-  &__sigil {
+  &__art {
     position: relative;
     z-index: 2;
-    width: 58px;
-    height: 58px;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--reward-accent);
-    color: var(--reward-accent);
-    background: fade(@ink, 55%);
-    transform: rotate(-2deg);
+    display: block;
+    overflow: hidden;
+    border: 1px solid fade(@paper, 34%);
+    border-radius: 7px;
+    background: @ink;
+    box-shadow: 0 4px 10px fade(#000, 42%);
 
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 9px;
-      border: 1px solid fade(@paper, 18%);
-      transform: rotate(45deg);
-    }
-
-    svg { filter: drop-shadow(2px 0 0 fade(@red, 56%)); }
-
-    &::after {
-      inset: 18px;
-      border-color: var(--reward-accent);
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 27%;
+      pointer-events: none;
     }
   }
 
@@ -2439,7 +2337,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
   &.is-selected {
     border-color: var(--reward-accent);
-    box-shadow: 5px 5px 0 @red, -2px 0 0 @cyan;
+    box-shadow: 0 9px 20px fade(#000, 58%), 3px 3px 0 @red, -2px 0 0 @cyan;
     filter: saturate(1.15) contrast(1.08);
 
     .ah-reward-card__stamp {
@@ -2790,17 +2688,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   .ah-reward-card {
     height: 300px;
     padding: 8px 6px 9px;
-    grid-template-rows: auto 46px auto auto auto 1fr;
+    grid-template-rows: auto 72px auto auto auto 1fr;
     gap: 4px;
 
-    &__sigil {
-      width: 46px;
-      height: 46px;
-
-      svg {
-        width: 25px;
-        height: 25px;
-      }
+    &__art {
+      border-radius: 6px;
     }
 
     > b {

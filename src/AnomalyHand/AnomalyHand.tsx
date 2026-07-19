@@ -8,12 +8,17 @@ import { HEROES } from './data'
 import { openAigramProfile } from '@shared/runtime'
 import { t } from './i18n'
 import type { ActionCard, Enemy, Hero, Intent, RewardId } from './types'
-import breachArt from './img/cards/breach.svg'
-import overloadArt from './img/cards/overload.svg'
-import braceArt from './img/cards/brace.svg'
-import counterArt from './img/cards/counter.svg'
-import probeArt from './img/cards/probe.svg'
-import calibrateArt from './img/cards/calibrate.svg'
+import breachArt from './img/card-art/breach.webp'
+import overloadArt from './img/card-art/overload.webp'
+import braceArt from './img/card-art/brace.webp'
+import counterArt from './img/card-art/counter.webp'
+import probeArt from './img/card-art/probe.webp'
+import calibrateArt from './img/card-art/calibrate.webp'
+import rewardBreachArt from './img/card-art/reward-breach.webp'
+import rewardGuardArt from './img/card-art/reward-guard.webp'
+import rewardStartSequenceArt from './img/card-art/reward-start-sequence.webp'
+import rewardExtraHealArt from './img/card-art/reward-extra-heal.webp'
+import rewardExposeBonusArt from './img/card-art/reward-expose-bonus.webp'
 import './AnomalyHand.less'
 
 const CARD_ART: Record<string, string> = {
@@ -25,12 +30,12 @@ const CARD_ART: Record<string, string> = {
   calibrate: calibrateArt,
 }
 
-const REWARD_ICON: Record<RewardId, 'breach' | 'guard' | 'sequence' | 'health' | 'tech'> = {
-  breach: 'breach',
-  guard: 'guard',
-  startSequence: 'sequence',
-  extraHeal: 'health',
-  exposeBonus: 'tech',
+const REWARD_ART: Record<RewardId, string> = {
+  breach: rewardBreachArt,
+  guard: rewardGuardArt,
+  startSequence: rewardStartSequenceArt,
+  extraHeal: rewardExtraHealArt,
+  exposeBonus: rewardExposeBonusArt,
 }
 
 function HeroArt({ hero, compact = false, hurt = false }: { hero: Hero; compact?: boolean; hurt?: boolean }) {
@@ -84,7 +89,6 @@ function Card({ card, disabled, motion, onPlay }: { card: ActionCard; disabled: 
       disabled={disabled}
       onPointerDown={onPlay}
     >
-      <span className="ah-card__registration" />
       {card.kind !== 'signature' && <img className="ah-card__art" src={CARD_ART[card.id]} alt="" draggable={false} />}
       <span className="ah-card__kind"><Icon name={card.kind} size={18} /></span>
       <strong>{t(card.nameKey)}</strong>
@@ -378,7 +382,7 @@ export default function AnomalyHand() {
                     <small>{t('game.mod', { n: index + 1 })}</small>
                     <i>{String(index + 1).padStart(2, '0')}</i>
                   </span>
-                  <span className="ah-reward-card__sigil"><Icon name={REWARD_ICON[reward.id]} size={32} /></span>
+                  <span className="ah-reward-card__art"><img src={REWARD_ART[reward.id]} alt="" draggable={false} /></span>
                   <span className="ah-reward-card__type">{t(`reward.${reward.id}.type`)}</span>
                   <b>{t(`reward.${reward.id}.value`)}</b>
                   <strong>{t(reward.nameKey)}</strong>

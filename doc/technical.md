@@ -7,7 +7,7 @@
 - Vite 5 构建，`base: './'`，生产输出位于 `dist/`，资源路径可在任意部署子目录运行。
 - Web Audio API 合成纸张、机械定位、命中、护盾、受伤、签名技、评级、发牌和结算多层音效；首次用户操作后才创建 `AudioContext`，压缩器限制峰值。
 - 8 位英雄各使用独立完整 WebP 卡面；人物、场景、方向边界与几何能力带由 Aigram transit raster 流程在同一图中生成，CSS 只负责圆角遮罩、受击专色和可读 UI。
-- 未选英雄复用同一完整 WebP 卡面并以敌对档案筛网进入战斗；6 张基础行动牌使用本地 SVG 象征物插图。
+- 未选英雄复用同一完整 WebP 卡面并以敌对档案筛网进入战斗；6 张基础行动牌与 5 张强化牌使用独立生成的 C「异能档案」WebP 象征卡图。
 - `src/shared/` 提供存档、头像生图、模型异变和按永久游戏 UUID 分区的平台排行榜请求。
 - 轻量 `i18n` 模块支持中文与英文，通过 `localStorage.game_locale` 覆盖或浏览器语言自动检测。
 
@@ -27,6 +27,7 @@ anomaly-hand/
 ├── src/
 │   ├── fonts/                   # Onest、JetBrains Mono 与中英展示字体子集
 │   ├── AnomalyHand/
+│   │   ├── img/card-art/        # 6 张行动牌与 5 张强化牌完整 WebP 象征卡图
 │   │   ├── img/heroes/full/     # 8 位英雄完整收藏卡 WebP（运行时使用）
 │   │   ├── img/heroes/cutouts/  # 仅供身份参考与历史兼容，不在主界面导入
 │   │   ├── img/heroes/states/   # 历史战损素材，不在主界面导入
@@ -46,6 +47,7 @@ anomaly-hand/
 ├── _artifacts/heroes/           # 生图日志、阶段产物与角色联系表
 ├── _qa/ui/                      # 390×844 与 320×568 首轮/复验截图
 ├── scripts/generate-heroes.cjs  # 上传参考、transit 生图与透明化脚本
+├── scripts/generate-card-art.cjs # 逐张生成并记录行动/强化卡图的 transit 脚本
 ├── scripts/generate-interface-art.cjs # 界面位图制作与请求日志
 ├── meta.json
 ├── package.json
@@ -76,7 +78,7 @@ anomaly-hand/
 
 ### 界面位图
 
-`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。战斗网格把桌面固定在层级 1、手牌在 2、`ah-battle__resolution` 在 40；两拍结算不再嵌入舞台，而是由隔离的结果覆盖层承载，底板伪元素只在结果卡内部叠放。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台、战术卡、奖励与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
+`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID，同时以 `CARD_ART` 与 `REWARD_ART` 映射 6 张行动牌和 5 张强化牌的完整 WebP 象征图。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。战斗网格把桌面固定在层级 1、手牌在 2、`ah-battle__resolution` 在 40；两拍结算不再嵌入舞台，而是由隔离的结果覆盖层承载，底板伪元素只在结果卡内部叠放。行动与强化卡不再使用 SVG 主视觉、折角或多重裁切框：位图直接以圆角遮罩入卡，CSS 只建立文字可读带与选中反馈。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
 
 ### 字体系统
 
