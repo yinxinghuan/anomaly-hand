@@ -72,7 +72,7 @@ anomaly-hand/
 
 ### 英雄资产与完整卡面
 
-`data.ts` 静态导入 `img/heroes/full/*.webp`，让首发 8 位英雄在选择、战斗、敌对档案和结果页始终使用同一张完整卡面。`HeroArt` 不再拼接透明人物、环轨或统一底栏；它只以圆角遮罩与柔和投影承载插画，受击时叠加专色裂痕、暗角和短暂位移。运行时个人档案同样不使用扣底链路：`usePlayerArchiveCard.ts` 从 3 个已验收的 `ACTIVE_ARCHIVE_CARD_STYLES` 中用加密随机数锁定 A/B/C 方向，将 `pendingStyle` 先持久化，再以头像作身份参考调用 `useGenImage` 生成一张完整场景插画。D/E/F 保留为定义但未上线的扩展探索，不能进入随机池。成功卡保存为 `artUrl` 和 `style`；旧存档的 `portraitUrl` 仅作兼容读取。`AnomalyHand.tsx` 的个人档案预览优先渲染 `artUrl`。
+`data.ts` 静态导入 `img/heroes/full/*.webp`，让首发 8 位英雄在选择、战斗、敌对档案和结果页始终使用同一张完整卡面。`HeroArt` 不再拼接透明人物、环轨或统一底栏；它只以圆角遮罩与柔和投影承载插画，受击时叠加专色裂痕、暗角和短暂位移。选择页不再套红青展示框或固定分类标签；战斗敌我卡也不再使用旧斜裁、内框、定位环或额外放大裁切，统一为 12 px 圆角物理容器。运行时个人档案同样不使用扣底链路：`usePlayerArchiveCard.ts` 从 3 个已验收的 `ACTIVE_ARCHIVE_CARD_STYLES` 中用加密随机数锁定 A/B/C 方向，将 `pendingStyle` 先持久化，再以头像作身份参考调用 `useGenImage` 生成一张完整场景插画。D/E/F 保留为定义但未上线的扩展探索，不能进入随机池。成功卡保存为 `artUrl` 和 `style`；旧存档的 `portraitUrl` 仅作兼容读取。`AnomalyHand.tsx` 的个人档案预览优先渲染 `artUrl`。
 
 ### 界面位图
 

@@ -723,10 +723,8 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     min-height: 0;
     display: grid;
     place-items: stretch;
-    padding: 4px 3px 6px;
-    background:
-      linear-gradient(90deg, @red 0 18px, transparent 18px calc(100% - 18px), @cyan calc(100% - 18px)),
-      linear-gradient(180deg, fade(@paper, 13%), transparent 12%, transparent 88%, fade(@paper, 13%));
+    padding: 2px 0 5px;
+    background: linear-gradient(180deg, fade(@paper, 7%), transparent 13%, transparent 88%, fade(@paper, 6%));
   }
 
   &__archive-label {
@@ -763,12 +761,10 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid fade(@paper, 58%);
+  border: 1px solid fade(@paper, 28%);
+  border-radius: 12px;
   background: @carbon;
-  box-shadow:
-    5px 5px 0 fade(@red, 58%),
-    -2px 2px 0 fade(@cyan, 36%);
-  clip-path: polygon(8% 0, 100% 0, 100% 89%, 93% 100%, 0 100%, 0 7%);
+  box-shadow: 0 18px 34px fade(#000, 48%), inset 0 1px 0 fade(@paper, 18%);
 
   &::before {
     content: "";
@@ -776,24 +772,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     inset: 0;
     z-index: 3;
     pointer-events: none;
-    background:
-      linear-gradient(180deg, transparent 29%, fade(@ink, 19%) 49%, fade(@ink, 97%) 77%),
-      linear-gradient(112deg, fade(@red, 17%), transparent 30% 76%, fade(@cyan, 12%)),
-      repeating-linear-gradient(90deg, transparent 0 48px, fade(@paper, 5%) 49px, transparent 50px);
+    background: linear-gradient(180deg, transparent 44%, fade(@ink, 18%) 59%, fade(@ink, 97%) 82%);
   }
 
   &::after {
-    content: "A—H / CLASSIFIED";
-    position: absolute;
-    z-index: 7;
-    top: 14px;
-    left: 15px;
-    padding: 4px 6px;
-    border-left: 3px solid @red;
-    background: fade(@ink, 72%);
-    color: @paper;
-    font: 500 8px/1 "AH Mono", monospace;
-    letter-spacing: .1em;
+    display: none;
   }
 
   &__art {
@@ -813,27 +796,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &__serial {
-    position: absolute;
-    z-index: 7;
-    top: 12px;
-    right: 14px;
-    display: flex;
-    align-items: baseline;
-    gap: 3px;
-    color: @cyan;
-    .ah-number-accent();
-    letter-spacing: .035em;
-
-    span {
-      font-size: 25px;
-      line-height: 1;
-    }
-
-    i {
-      color: @dust;
-      font-style: normal;
-      font-size: 9px;
-    }
+    display: none;
   }
 
   &__copy {
@@ -1392,28 +1355,19 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     position: relative;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid fade(@paper, 46%);
-    border-radius: 1px;
+    border: 1px solid fade(@paper, 28%);
+    border-radius: 12px;
     background: @carbon;
-    box-shadow: 4px 4px 0 fade(#000, 58%);
-    clip-path: polygon(9% 0, 100% 0, 100% 88%, 90% 100%, 0 100%, 0 8%);
+    box-shadow: 0 12px 26px fade(#000, 52%), inset 0 1px 0 fade(@paper, 16%);
 
     &::before {
-      content: "";
-      position: absolute;
-      z-index: 4;
-      inset: 6px;
-      pointer-events: none;
-      border: 1px solid fade(@paper, 18%);
-      clip-path: polygon(8% 0, 100% 0, 100% 89%, 89% 100%, 0 100%, 0 8%);
+      display: none;
     }
   }
 
   &__hero-card {
-    border-color: fade(@cyan, 76%);
-    box-shadow:
-      4px 4px 0 fade(@red, 52%),
-      inset 0 0 0 1px fade(@paper, 25%);
+    border-color: fade(@cyan, 52%);
+    box-shadow: 0 12px 26px fade(#000, 52%), inset 0 1px 0 fade(@paper, 18%);
   }
 
   &__enemy-label,
@@ -2139,17 +2093,13 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   &--rival img {
     object-fit: cover;
     object-position: center;
-    transform: scale(1.08);
+    transform: none;
     filter: saturate(.72) contrast(1.12) hue-rotate(-8deg);
   }
 
   &::before,
   &::after {
-    content: "";
-    position: absolute;
-    z-index: 2;
-    border: 1px solid fade(@cyan, 66%);
-    transform: rotate(45deg);
+    display: none;
   }
 
   &::before {
@@ -2184,47 +2134,11 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   }
 
   &__halo {
-    z-index: 3;
-    position: absolute;
-    top: 11%;
-    left: 50%;
-    width: 61%;
-    aspect-ratio: 1;
-    border: 1px solid fade(@cyan, 48%);
-    border-radius: 50%;
-    transform: translateX(-50%);
-
-    &::before,
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 12%;
-      border: 1px dashed fade(@paper, 28%);
-      border-radius: 50%;
-    }
-
-    &::after {
-      inset: 28%;
-      border-style: solid;
-      border-color: fade(@red, 55%);
-    }
+    display: none;
   }
 
   &__mark {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  &__mark {
-    z-index: 5;
-    top: 49%;
-    width: 11%;
-    aspect-ratio: 1;
-    border: 2px solid @red;
-    border-radius: 50%;
-    box-shadow: 4px 0 0 @cyan;
-    opacity: .84;
+    display: none;
   }
 }
 
