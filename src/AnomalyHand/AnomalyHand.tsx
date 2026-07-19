@@ -36,12 +36,7 @@ const REWARD_ICON: Record<RewardId, 'breach' | 'guard' | 'sequence' | 'health' |
 function HeroArt({ hero, compact = false, hurt = false }: { hero: Hero; compact?: boolean; hurt?: boolean }) {
   return (
     <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'} ${hurt ? 'is-hurt' : ''}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
-      <span className="ah-hero-art__print" aria-hidden="true" />
-      <span className="ah-hero-art__orbit" aria-hidden="true" />
-      <img src={hurt ? hero.hurtImage : hero.image} alt="" draggable={false} />
-      <span className="ah-hero-art__frame" aria-hidden="true" />
-      <span className="ah-hero-art__icons" aria-hidden="true" />
-      <span className="ah-hero-art__catalog" aria-hidden="true" />
+      <img src={hero.image} alt="" draggable={false} />
     </div>
   )
 }

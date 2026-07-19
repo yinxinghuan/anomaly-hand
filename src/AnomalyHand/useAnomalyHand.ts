@@ -6,6 +6,7 @@ import type { ActionCard, CardKind, CombatFeedback, Enemy, Hero, HeroId, Intent,
 import type { MutationEffect } from './usePlayerArchiveCard'
 
 const MAX_HP = 30
+const SELECT_CANDIDATE_COUNT = 5
 const CHAPTER_DURATION = {
   intro: 1650,
   turn: 1250,
@@ -62,7 +63,7 @@ type AnomalyHandOptions = {
 
 export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeated }: AnomalyHandOptions = {}) {
   const [phase, setPhase] = useState<Phase>('select')
-  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, HEROES.length))
+  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, SELECT_CANDIDATE_COUNT))
   const [heroId, setHeroId] = useState<HeroId>(() => draftHeroes[0].id)
   const [encounters, setEncounters] = useState<Enemy[]>(() => createRivalEncounterRoster('las'))
   const [encounterIndex, setEncounterIndex] = useState(0)
@@ -770,7 +771,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setFeedback(null)
     setChapter(null)
     setMessage(t('message.select'))
-    const nextDraft = sample(HEROES, HEROES.length)
+    const nextDraft = sample(HEROES, SELECT_CANDIDATE_COUNT)
     setDraftHeroes(nextDraft)
     setHeroId(nextDraft[0].id)
   }, [])

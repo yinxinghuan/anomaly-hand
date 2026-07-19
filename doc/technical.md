@@ -6,8 +6,8 @@
 - Less 负责响应式布局、位图裁切/遮罩、卡牌视觉和动效。
 - Vite 5 构建，`base: './'`，生产输出位于 `dist/`，资源路径可在任意部署子目录运行。
 - Web Audio API 合成纸张、机械定位、命中、护盾、受伤、签名技、评级、发牌和结算多层音效；首次用户操作后才创建 `AudioContext`，压缩器限制峰值。
-- 8 位英雄各使用独立透明 WebP；人物由 Aigram transit raster 流程生成，卡框和套印系统由 CSS/SVG 绘制。
-- 未选英雄复用统一透明 WebP 并以敌对档案筛网进入战斗；6 张基础行动牌使用本地 SVG 象征物插图。
+- 8 位英雄各使用独立完整 WebP 卡面；人物、场景、方向边界与几何能力带由 Aigram transit raster 流程在同一图中生成，CSS 只负责圆角遮罩、受击专色和可读 UI。
+- 未选英雄复用同一完整 WebP 卡面并以敌对档案筛网进入战斗；6 张基础行动牌使用本地 SVG 象征物插图。
 - `src/shared/` 提供存档、头像生图、模型异变和按永久游戏 UUID 分区的平台排行榜请求。
 - 轻量 `i18n` 模块支持中文与英文，通过 `localStorage.game_locale` 覆盖或浏览器语言自动检测。
 
@@ -27,8 +27,9 @@ anomaly-hand/
 ├── src/
 │   ├── fonts/                   # Onest、JetBrains Mono 与中英展示字体子集
 │   ├── AnomalyHand/
-│   │   ├── img/heroes/cutouts/  # 8 位英雄战备透明 WebP
-│   │   ├── img/heroes/states/   # 8 位英雄战损透明 WebP
+│   │   ├── img/heroes/full/     # 8 位英雄完整收藏卡 WebP（运行时使用）
+│   │   ├── img/heroes/cutouts/  # 仅供身份参考与历史兼容，不在主界面导入
+│   │   ├── img/heroes/states/   # 历史战损素材，不在主界面导入
 │   │   ├── img/interface/        # 敌方档案与共享战斗底板 WebP
 │   │   ├── i18n/index.ts        # zh/en 字典、语言检测与变量插值
 │   │   ├── AnomalyHand.tsx      # 所有屏幕与可访问交互
@@ -71,7 +72,7 @@ anomaly-hand/
 
 ### 英雄资产与完整卡面
 
-`data.ts` 静态导入 `img/heroes/cutouts/*.webp`，供首发 8 位英雄的战斗状态与战损切换使用。运行时个人档案则不使用这条扣底链路：`usePlayerArchiveCard.ts` 会从 6 个 `ARCHIVE_CARD_STYLES` 中用加密随机数锁定一个方向，将 `pendingStyle` 先持久化，再以头像作身份参考调用 `useGenImage` 生成一张完整场景插画。成功卡保存为 `artUrl` 和 `style`；旧存档的 `portraitUrl` 仅作兼容读取。`AnomalyHand.tsx` 的个人档案预览优先渲染 `artUrl`，Less 用圆角遮罩、细纸边高光和柔和投影承载整张插画，而不是叠加厚重档案框。
+`data.ts` 静态导入 `img/heroes/full/*.webp`，让首发 8 位英雄在选择、战斗、敌对档案和结果页始终使用同一张完整卡面。`HeroArt` 不再拼接透明人物、环轨或统一底栏；它只以圆角遮罩与柔和投影承载插画，受击时叠加专色裂痕、暗角和短暂位移。运行时个人档案同样不使用扣底链路：`usePlayerArchiveCard.ts` 从 3 个已验收的 `ACTIVE_ARCHIVE_CARD_STYLES` 中用加密随机数锁定 A/B/C 方向，将 `pendingStyle` 先持久化，再以头像作身份参考调用 `useGenImage` 生成一张完整场景插画。D/E/F 保留为定义但未上线的扩展探索，不能进入随机池。成功卡保存为 `artUrl` 和 `style`；旧存档的 `portraitUrl` 仅作兼容读取。`AnomalyHand.tsx` 的个人档案预览优先渲染 `artUrl`。
 
 ### 界面位图
 
@@ -99,9 +100,9 @@ anomaly-hand/
 
 ## 4. 扩展点
 
-- 增加英雄：在 `data.ts` 添加 Hero，补齐 `i18n/index.ts` 的中英文能力键，并在 `makeSignature()` 与出牌/敌方结算中加入被动和签名效果；把独立肖像放入 `src/AnomalyHand/img/heroes/cutouts/`。
-- 换首发人物素材：替换对应透明 WebP import；保持头顶/角/耳朵安全区、统一光向和底部落位，不需要改 `HeroArt`。
-- 增加运行时卡面方向：在 `usePlayerArchiveCard.ts` 的 `ARCHIVE_CARD_STYLES` 添加唯一 ID 和完整场景提示词；不得把风格 ID 改为不稳定随机字符串，已生成卡依赖该 ID 复原归档含义。
+- 增加英雄：在 `data.ts` 添加 Hero，补齐 `i18n/index.ts` 的中英文能力键，并在 `makeSignature()` 与出牌/敌方结算中加入被动和签名效果；把完整卡面放入 `src/AnomalyHand/img/heroes/full/`。
+- 换首发人物素材：替换对应完整 WebP import；保持脸、眼睛、角/耳朵/伙伴等身份锚点在裁切安全区内，不需要改 `HeroArt`。
+- 增加运行时卡面方向：先在 `usePlayerArchiveCard.ts` 的 `ARCHIVE_CARD_STYLES` 添加唯一 ID、整卡构图提示词与审核样张；通过视觉验收后才加入 `ACTIVE_ARCHIVE_CARD_STYLES`，不得把风格 ID 改为不稳定随机字符串，已生成卡依赖该 ID 复原归档含义。
 - 增加基础牌：在 `BASE_CARDS` 添加定义，并在 `playCard()` 增加结算分支。
 - 调整数值与局长：修改 `data.ts` 的敌人生命/攻击/pattern 和 `useAnomalyHand.ts` 的牌值、回血与序列规则。
 - 增加敌人：在 `ENEMIES` 添加数据，导入对应 WebP 并写入 `ENEMY_ART` 映射；需要独立裁切时再增加 `.ah-enemy-art--<id>`。

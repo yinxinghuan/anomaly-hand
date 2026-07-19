@@ -72,15 +72,15 @@ type ArchiveCardStyle = {
 const ARCHIVE_CARD_STYLES: ArchiveCardStyle[] = [
   {
     id: 'lacquer-war-chronicle',
-    prompt: 'Style A, Lacquer War Chronicle: deep black lacquer, distressed gilt, oxblood and antique bronze. Place the operative in an epic active confrontation with a fractured weapon-like anomaly, smoke and torn gold-leaf atmosphere. Stately, tactile, dramatic, with no historical lettering and no ornamental card border.',
+    prompt: 'Style A, Lacquer War Chronicle: the finished picture itself is a premium 4:5 collectible card, with a matte obsidian-lacquer and deep-oxblood surface, thin weathered antique-gold border with clipped 45-degree corners, restrained gold cracks and a dark bottom band. Put the operative in an epic active confrontation with a fractured weapon-like anomaly, smoke and torn gilt atmosphere. The fine card architecture is physically drawn into the illustration, not a UI overlay. No historical lettering, no moon, no calligraphy or glyph-like decoration.',
   },
   {
     id: 'astral-reliquary',
-    prompt: 'Style B, Astral Reliquary: midnight indigo, bone white and old gold, with sparse orbital traces, relic fragments and an open ruin or void around the operative. Create a composed, mysterious narrative image with depth and silence. Do not use religious symbols, astrology labels, or a portrait-photo pose.',
+    prompt: 'Style B, Astral Reliquary: the finished picture itself is a premium 4:5 collectible card, with midnight indigo paper, thin bone-white and old-gold structural rules, sparse orbital traces, relic fragments, and a calm dark bottom band. Create a composed mysterious scene with depth and silence around the operative. The fine card architecture is drawn into the image. Do not use religion, astrology labels, or a portrait-photo pose.',
   },
   {
     id: 'anomaly-dossier',
-    prompt: 'Style C, Anomaly Dossier: charcoal black, signal vermilion and acid cyan screenprint, coarse halftone and purposeful registration shifts. Show an urgent anomalous field operation at the moment control fails, energetic diagonal composition, richly detailed. Do not draw a fixed dossier frame or UI onto the picture.',
+    prompt: 'Style C, Anomaly Dossier: the finished picture itself is a premium 4:5 collectible card, with charcoal stock, signal vermilion and acid cyan screenprint, coarse halftone, dry ink gaps, broken diagonal registration blocks, irregular clipped edges and a narrow black bottom band. Show an urgent anomalous field operation at the moment control fails: energetic diagonal composition, richly detailed. The card architecture is printed into the picture, not added by UI.',
   },
   {
     id: 'midnight-operation',
@@ -96,15 +96,20 @@ const ARCHIVE_CARD_STYLES: ArchiveCardStyle[] = [
   },
 ]
 
+// Only the three directions whose complete-card construction has been visually
+// approved are assigned to new players. The broader D/E/F exploration directions
+// remain readable for old saves but are not allowed to dilute the live archive.
+const ACTIVE_ARCHIVE_CARD_STYLES = ARCHIVE_CARD_STYLES.slice(0, 3)
+
 function isPublicHttps(value: unknown): value is string {
   return typeof value === 'string' && /^https:\/\//i.test(value)
 }
 
 function chooseArchiveCardStyle(): ArchiveCardStyle {
   const index = typeof crypto !== 'undefined' && crypto.getRandomValues
-    ? crypto.getRandomValues(new Uint32Array(1))[0] % ARCHIVE_CARD_STYLES.length
-    : Math.floor(Math.random() * ARCHIVE_CARD_STYLES.length)
-  return ARCHIVE_CARD_STYLES[index]
+    ? crypto.getRandomValues(new Uint32Array(1))[0] % ACTIVE_ARCHIVE_CARD_STYLES.length
+    : Math.floor(Math.random() * ACTIVE_ARCHIVE_CARD_STYLES.length)
+  return ACTIVE_ARCHIVE_CARD_STYLES[index]
 }
 
 function getArchiveCardStyle(id: ArchiveCardStyleId): ArchiveCardStyle {
@@ -115,7 +120,7 @@ function createFullCardPrompt(style: ArchiveCardStyle, hasAvatarReference: boole
   const identity = hasAvatarReference
     ? 'Use the supplied public avatar only as identity reference. Preserve the person’s recognisable facial anchors, hair and overall presence, while redrawing them as an original fictional operative.'
     : 'Invent one distinctive, non-celebrity fictional operative with a recognisable face, visible eyes and a strong silhouette.'
-  return `Create one original, collectible FULL-CARD ILLUSTRATION for a premium mobile anomaly battler. ${identity} The image itself must be one cohesive full-bleed story scene: character, action, environment, anomaly and symbolic objects belong together in the same composition. Compose broadly enough to survive a central tall-card crop, with the face and eyes clearly visible but not constrained to a chest-up or three-quarter portrait. ${style.prompt} Absolutely do not isolate the character on a transparent, white, plain or gradient background. Do not make a cutout, a passport photo, a generic profile portrait, a fixed card frame, a UI panel, a phone screen, readable text, logo or watermark. No collage of separately framed portrait and background; generate the whole scene as one illustration.`
+  return `Create one original, collectible FULL-CARD ILLUSTRATION for a premium mobile anomaly battler. ${identity} The image itself must be one cohesive full-bleed story scene: character, action, environment, anomaly and symbolic objects belong together in the same composition. Compose broadly enough to survive a central tall-card crop, with the face and eyes clearly visible but not constrained to a chest-up or three-quarter portrait. ${style.prompt} Absolutely do not isolate the character on a transparent, white, plain or gradient background. Do not make a cutout, a passport photo, a generic profile portrait, a UI panel, a phone screen, readable text, letters, numbers, logo, watermark, rune or glyph-like marks. The bottom band may contain only four separated simple non-linguistic shapes: a solid dot, hollow circle, diamond and eight-point star. No collage of separately framed portrait and background; generate the whole scene as one authored finished card illustration.`
 }
 
 function parseMutation(raw: string): Omit<ArchiveMutation, 'id' | 'triggerAt' | 'createdAt'> {

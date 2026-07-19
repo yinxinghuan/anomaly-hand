@@ -1,20 +1,12 @@
 import type { ActionCard, Enemy, Hero, HeroId, Reward } from './types'
-import lasImage from './img/heroes/cutouts/las.webp'
-import isabelImage from './img/heroes/cutouts/isabel.webp'
-import smithImage from './img/heroes/cutouts/smith.webp'
-import goatImage from './img/heroes/cutouts/goat.webp'
-import getuImage from './img/heroes/cutouts/getu.webp'
-import chillImage from './img/heroes/cutouts/chill.webp'
-import kiboImage from './img/heroes/cutouts/kibo.webp'
-import johnImage from './img/heroes/cutouts/john.webp'
-import lasHurtImage from './img/heroes/states/las-hurt.webp'
-import isabelHurtImage from './img/heroes/states/isabel-hurt.webp'
-import smithHurtImage from './img/heroes/states/smith-hurt.webp'
-import goatHurtImage from './img/heroes/states/goat-hurt.webp'
-import getuHurtImage from './img/heroes/states/getu-hurt.webp'
-import chillHurtImage from './img/heroes/states/chill-hurt.webp'
-import kiboHurtImage from './img/heroes/states/kibo-hurt.webp'
-import johnHurtImage from './img/heroes/states/john-hurt.webp'
+import lasImage from './img/heroes/full/las.webp'
+import isabelImage from './img/heroes/full/isabel.webp'
+import smithImage from './img/heroes/full/smith.webp'
+import goatImage from './img/heroes/full/goat.webp'
+import getuImage from './img/heroes/full/getu.webp'
+import chillImage from './img/heroes/full/chill.webp'
+import kiboImage from './img/heroes/full/kibo.webp'
+import johnImage from './img/heroes/full/john.webp'
 
 export const HEROES: Hero[] = [
   {
@@ -25,7 +17,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.las.signature',
     signatureDescriptionKey: 'hero.las.signatureDesc',
     image: lasImage,
-    hurtImage: lasHurtImage,
   },
   {
     id: 'isabel',
@@ -35,7 +26,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.isabel.signature',
     signatureDescriptionKey: 'hero.isabel.signatureDesc',
     image: isabelImage,
-    hurtImage: isabelHurtImage,
   },
   {
     id: 'smith',
@@ -45,7 +35,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.smith.signature',
     signatureDescriptionKey: 'hero.smith.signatureDesc',
     image: smithImage,
-    hurtImage: smithHurtImage,
   },
   {
     id: 'goat',
@@ -55,7 +44,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.goat.signature',
     signatureDescriptionKey: 'hero.goat.signatureDesc',
     image: goatImage,
-    hurtImage: goatHurtImage,
   },
   {
     id: 'getu',
@@ -65,7 +53,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.getu.signature',
     signatureDescriptionKey: 'hero.getu.signatureDesc',
     image: getuImage,
-    hurtImage: getuHurtImage,
   },
   {
     id: 'chill',
@@ -75,7 +62,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.chill.signature',
     signatureDescriptionKey: 'hero.chill.signatureDesc',
     image: chillImage,
-    hurtImage: chillHurtImage,
   },
   {
     id: 'kibo',
@@ -85,7 +71,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.kibo.signature',
     signatureDescriptionKey: 'hero.kibo.signatureDesc',
     image: kiboImage,
-    hurtImage: kiboHurtImage,
   },
   {
     id: 'john',
@@ -95,7 +80,6 @@ export const HEROES: Hero[] = [
     signatureNameKey: 'hero.john.signature',
     signatureDescriptionKey: 'hero.john.signatureDesc',
     image: johnImage,
-    hurtImage: johnHurtImage,
   },
 ]
 

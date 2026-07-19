@@ -2,11 +2,18 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
-const sharp = require('sharp')
+const { webcrypto } = require('node:crypto')
+let sharp
+try {
+  sharp = require('sharp')
+} catch {
+  sharp = null
+}
 
 const ROOT = path.resolve(__dirname, '..')
 const OUT = path.join(ROOT, 'src', 'AnomalyHand', 'img', 'heroes')
 const CUTOUT_DIR = path.join(OUT, 'cutouts')
+const FULL_DIR = path.join(OUT, 'full')
 const WORK = path.join(ROOT, '_artifacts', 'heroes')
 const SOURCE_DIR = path.join(WORK, 'sources')
 const REF_DIR = path.join(WORK, 'references')
@@ -17,6 +24,10 @@ const UPLOAD_API = 'https://chat.aiwaves.tech/aigram/api/upload'
 const mode = process.argv[2] || 'all'
 const force = process.argv.includes('--force')
 const selectedId = process.argv.find(arg => arg.startsWith('--id='))?.slice(5)
+const selectedStyleId = process.argv.find(arg => arg.startsWith('--style='))?.slice(8)
+const referenceOverride = process.argv.find(arg => arg.startsWith('--ref='))?.slice(6)
+const styleReferenceId = process.argv.find(arg => arg.startsWith('--style-ref='))?.slice(12) || 'style-c'
+const uploadReferenceFile = process.argv.find(arg => arg.startsWith('--file='))?.slice(7)
 
 const ATTACHMENTS = '/tmp/codex-remote-attachments/019f6c0d-3b6d-7d33-9c19-021a3a35d876/EC848189-2D31-4A27-90C9-DE376604A1A5'
 
@@ -137,7 +148,7 @@ const headers = {
 }
 
 function ensureDirs() {
-  for (const dir of [OUT, CUTOUT_DIR, WORK, SOURCE_DIR, REF_DIR]) fs.mkdirSync(dir, { recursive: true })
+  for (const dir of [OUT, CUTOUT_DIR, FULL_DIR, WORK, SOURCE_DIR, REF_DIR]) fs.mkdirSync(dir, { recursive: true })
 }
 
 function loadLog() {
@@ -242,6 +253,126 @@ async function downloadAsPng(url, outputPath) {
     .resize(1024, 1280, { fit: 'cover', position: 'attention' })
     .png({ compressionLevel: 9, palette: false })
     .toFile(outputPath)
+}
+
+async function downloadAsWebp(url, outputPath) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Download HTTP ${response.status}: ${url}`)
+  const input = Buffer.from(await response.arrayBuffer())
+  if (!sharp) {
+    const contentType = response.headers.get('content-type') || ''
+    const isWebp = input.subarray(0, 4).toString('ascii') === 'RIFF' && input.subarray(8, 12).toString('ascii') === 'WEBP'
+    if (!/image\/webp/i.test(contentType) && !isWebp) throw new Error(`Full-card fallback requires WebP output, received ${contentType || 'unknown type'}`)
+    fs.writeFileSync(outputPath, input)
+    return
+  }
+  await sharp(input)
+    .resize(1024, 1280, { fit: 'cover', position: 'attention' })
+    .webp({ quality: 88, effort: 6 })
+    .toFile(outputPath)
+}
+
+const FULL_CARD_STYLES = [
+  ['lacquer-war-chronicle', 'Style A, Lacquer War Chronicle. The finished picture itself is a premium 4:5 collectible card: matte obsidian lacquer and deep oxblood surface, a thin weathered antique-gold border with clipped 45-degree corners, restrained gold cracks and one dark bottom band. The character is in an epic active confrontation with a fractured weapon-like anomaly, smoke and torn gilt atmosphere. The frame occupies less than 9 percent of the picture and is physically part of the illustration, not an overlay.'],
+  ['astral-reliquary', 'Style B, Astral Reliquary. The finished picture itself is a premium 4:5 collectible card: midnight navy paper, thin bone-white and old-gold structural rules, sparse orbital diagrams and small celestial geometry, with a calm dark bottom band. The character relates to relic fragments, an open ruin or an anomaly in a composed scene with depth and silence. The card architecture is drawn into the image and occupies less than 10 percent; do not make a passport portrait, religion, or readable star-map labels.'],
+  ['anomaly-dossier', 'Style C, Anomaly Dossier. The finished picture itself is a premium 4:5 collectible card: charcoal stock, signal vermilion and acid cyan screenprint, coarse halftone, dry ink gaps, broken diagonal registration blocks, an irregular cut-paper edge and a narrow black bottom band. The character is inside an urgent anomalous field operation at the moment control fails. The card architecture is built into the printed illustration, not a front-end overlay.'],
+  ['midnight-operation', 'Midnight Operation: noir action-film side light, wet pavement, corridor or laboratory depth, cold teal, sodium yellow and one dangerous vermilion accent; the operative is pursuing, forcing entry, resisting or revealing an anomaly.'],
+  ['mineral-mural', 'Mineral Mural: mineral-pigment gouache, lithographic grain, geological strata, crystalline energy and large irregular color fields; the operative and anomaly are integrated into one bold mural-like scene.'],
+  ['signal-field-guide', 'Signal Field Guide: anomalous ecology expedition, weathered paper, dry-brush terrain, strange signal life and practical field instruments; the operative interacts with a living landscape or impossible creature.'],
+]
+
+const CLEAN_IDENTITY_REFS = Object.fromEntries(HEROES.map(hero => [
+  hero.id,
+  `https://raw.githubusercontent.com/yinxinghuan/anomaly-hand/main/src/AnomalyHand/img/heroes/cutouts/${hero.id}.webp`,
+]))
+
+function chooseFullCardStyle() {
+  return FULL_CARD_STYLES[webcrypto.getRandomValues(new Uint32Array(1))[0] % FULL_CARD_STYLES.length]
+}
+
+function findFullCardStyle(id) {
+  return FULL_CARD_STYLES.find(([styleId]) => styleId === id)
+}
+
+async function generateFullCards(log) {
+  const targets = selectedId ? HEROES.filter(hero => hero.id === selectedId) : HEROES
+  if (targets.length === 0) throw new Error(`Unknown hero id: ${selectedId}`)
+  for (const hero of targets) {
+    const entry = log.heroes[hero.id]
+    const outputPath = path.join(FULL_DIR, `${hero.id}.webp`)
+    if (!force && entry.full_card_url && fs.existsSync(outputPath)) {
+      process.stdout.write(`skip full ${hero.id}\n`)
+      continue
+    }
+    const referenceUrl = referenceOverride || CLEAN_IDENTITY_REFS[hero.id] || entry.reference_url
+    if (!referenceUrl) throw new Error(`Missing reference_url for ${hero.id}`)
+    const [styleId, stylePrompt] = selectedStyleId
+      ? findFullCardStyle(selectedStyleId) || (() => { throw new Error(`Unknown full-card style: ${selectedStyleId}`) })()
+      : entry.full_card_style
+      ? FULL_CARD_STYLES.find(([id]) => id === entry.full_card_style) || chooseFullCardStyle()
+      : chooseFullCardStyle()
+    const cleanup = {
+      las: 'No Chinese calligraphy, no Asian characters, no runes, no labels, no floating writing and no glyph-like decorative marks. Keep the red field clear apart from non-linguistic cracks and smoke.',
+      goat: 'Do not include flags, slogans, national symbols, political imagery, propaganda, fire writing or any readable writing anywhere in the image.',
+      getu: 'Show exactly one adult Black male operative. No child, no minor, no secondary person, no childlike figure and no person beside him.',
+      isabel: 'No circular portrait window, no medallion portrait, no duplicate person, no inset avatar and no readable glyphs. Show Isabel only once as the continuous full-scene figure.',
+      smith: 'No keyboard, desk, computer, hologram bedroom, screen, room miniature, white paper margin, neon signage, rune-like tattoo marks, pseudo-Chinese characters or readable glyphs. Keep the scene as a physical field confrontation, not a computer setup.',
+      john: 'No uniform badge, shoulder patch, insignia, name tape, writing, label, emblem with letters, or pseudo-text anywhere on his uniform. Keep exactly one German shepherd companion.',
+    }[hero.id] || 'Do not include any secondary human subject unless the identity lock explicitly requires one.'
+    const prompt = !force && entry.full_card_prompt ? entry.full_card_prompt : [
+      'Create one original, collectible FULL-CARD ILLUSTRATION for a premium mobile anomaly battler.',
+      `Identity lock: preserve this exact primary character: ${hero.identity}.`,
+      `Role and costume: ${hero.role}.`,
+      referenceOverride ? 'The supplied image is the approved visual target for the named card direction: reproduce its material, edge treatment, palette, graphic density and card architecture while redrawing a new complete scene.' : '',
+      'The image itself is one cohesive full-bleed 4:5 story scene: character, action, environment, anomaly and symbolic objects belong together in the same composition.',
+      'Keep face, eyes and key identity anchors clearly readable, but do not force a chest-up or three-quarter portrait; use a natural cinematic or mural composition.',
+      stylePrompt,
+      cleanup,
+      'Absolutely no transparent, white, plain or gradient background; no cutout; no passport pose; no generic profile portrait; no UI; no phone screen; no readable text; no letters; no numbers; no logo; no watermark; no runes; no glyphs; no character-like marks.',
+      'The direction-specific card edge is required as a painted/printed part of the one image. Its bottom band may contain only four separated, simple non-linguistic geometric marks: a solid dot, a hollow circle, a diamond, and an eight-point star. No collage of separately framed portrait and background. The scene must feel like one authored finished card illustration.',
+    ].join(' ')
+    const resultUrl = !force && entry.full_card_url ? entry.full_card_url : await generateImage(prompt, referenceUrl, `hero_${hero.id}_full`, log)
+    if (force || !entry.full_card_url) {
+      entry.full_card_style = styleId
+      entry.full_card_prompt = prompt
+      entry.full_card_url = resultUrl
+      entry.full_card_at = new Date().toISOString()
+      saveLog(log)
+    }
+    await downloadAsWebp(resultUrl, outputPath)
+    process.stdout.write(`full ${hero.id} ${styleId} ${resultUrl}\n`)
+    await new Promise(resolve => setTimeout(resolve, 3000))
+  }
+}
+
+const STYLE_REFERENCE_FILES = {
+  'style-a': 'style-a-las-reference.png',
+  'style-b': 'style-b-las-reference.png',
+  'style-c': 'style-c-smith-reference.png',
+}
+
+async function uploadStyleReference(log) {
+  const filename = STYLE_REFERENCE_FILES[styleReferenceId]
+  if (!filename) throw new Error(`Unknown style reference: ${styleReferenceId}`)
+  const styleRefPath = path.join(WORK, filename)
+  if (!fs.existsSync(styleRefPath)) throw new Error(`Missing style reference ${styleRefPath}`)
+  const url = await uploadImage(styleRefPath, `anomaly-hand-${styleReferenceId}-reference.png`)
+  log.style_references ||= {}
+  log.style_references[styleReferenceId] = url
+  saveLog(log)
+  process.stdout.write(`${url}\n`)
+}
+
+async function uploadCombinedReference(log) {
+  if (!uploadReferenceFile) throw new Error('Missing --file=relative-path')
+  const inputPath = path.resolve(ROOT, uploadReferenceFile)
+  if (!inputPath.startsWith(ROOT) || !fs.existsSync(inputPath)) throw new Error(`Missing combined reference ${inputPath}`)
+  const key = path.basename(inputPath, path.extname(inputPath))
+  const url = await uploadImage(inputPath, `anomaly-hand-${key}.png`)
+  log.combined_reference_urls ||= {}
+  log.combined_reference_urls[key] = url
+  saveLog(log)
+  process.stdout.write(`${url}\n`)
 }
 
 async function removeGreen(inputPath, outputPath) {
@@ -503,13 +634,16 @@ async function main() {
   else if (mode === 'contact-v2') await createContactSheet(true)
   else if (mode === 'contact-cutouts') await createCutoutContactSheet()
   else if (mode === 'reprocess-cutouts') await reprocessCutouts()
+  else if (mode === 'full') await generateFullCards(log)
+  else if (mode === 'upload-style') await uploadStyleReference(log)
+  else if (mode === 'upload-ref') await uploadCombinedReference(log)
   else if (mode === 'all') {
     await prepareAll(log)
     await uploadAll(log)
     await generateAll(log)
     await createContactSheet()
   } else {
-    throw new Error('Usage: node scripts/generate-heroes.cjs [prepare|upload|generate|refine|cutouts|reprocess-cutouts|contact|contact-v2|contact-cutouts|all] [--id=hero] [--force]')
+    throw new Error('Usage: node scripts/generate-heroes.cjs [prepare|upload|generate|refine|cutouts|reprocess-cutouts|full|upload-style|upload-ref|contact|contact-v2|contact-cutouts|all] [--id=hero] [--style=style-id] [--style-ref=style-a|style-b|style-c] [--file=relative-path] [--ref=https-url] [--force]')
   }
 }
 

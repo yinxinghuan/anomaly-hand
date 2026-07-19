@@ -12,7 +12,6 @@ export type Hero = {
   signatureNameKey: string
   signatureDescriptionKey: string
   image: string
-  hurtImage: string
 }
 
 export type ActionCard = {
