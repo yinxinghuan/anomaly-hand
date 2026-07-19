@@ -19,7 +19,6 @@ const COMBAT_FEEDBACK_DURATION = 2020
 const ENEMY_CHAPTER_DELAY = 2420
 const PLAYER_RESULT_HOLD = 2120
 const ENCOUNTER_HEAL = 4
-const REWARD_ENCOUNTERS = new Set([0, 2, 4])
 const CYCLE_SEAL_DURATION = 2400
 const ENCOUNTER_ENTRY = {
   enemyDeploy: CHAPTER_DURATION.intro + 80,
@@ -63,7 +62,7 @@ type AnomalyHandOptions = {
 
 export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeated }: AnomalyHandOptions = {}) {
   const [phase, setPhase] = useState<Phase>('select')
-  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, 3))
+  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, HEROES.length))
   const [heroId, setHeroId] = useState<HeroId>(() => draftHeroes[0].id)
   const [encounters, setEncounters] = useState<Enemy[]>(() => createRivalEncounterRoster('las'))
   const [encounterIndex, setEncounterIndex] = useState(0)
@@ -431,7 +430,8 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     }
     setPlayerHp(value => Math.min(MAX_HP, value + ENCOUNTER_HEAL + upgrades.extraHeal))
     setPlayerState('ready')
-    if (!REWARD_ENCOUNTERS.has(encounterIndex)) {
+    const shouldOfferReward = encounterIndex < encounters.length - 1 && encounterIndex % 2 === 0
+    if (!shouldOfferReward) {
       showChapter({
         kicker: t('game.caseStatus'),
         title: t('chapter.fileSealed'),
@@ -770,7 +770,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setFeedback(null)
     setChapter(null)
     setMessage(t('message.select'))
-    const nextDraft = sample(HEROES, 3)
+    const nextDraft = sample(HEROES, HEROES.length)
     setDraftHeroes(nextDraft)
     setHeroId(nextDraft[0].id)
   }, [])

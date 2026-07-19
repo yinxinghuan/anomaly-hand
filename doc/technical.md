@@ -55,7 +55,7 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 管理 `select → evolution → battle → reward → defeat`。选择页每次只发出 3 张随机行动员档案；确认后进入可停留的“活体档案”说明页，再开始首场。每一轮由 7 名未选行动员组成，`createRivalEncounterRoster(player, round)` 随机排序并按轮次提高生命和攻击；第 7 场显示 2,400 ms 的轮次封存章，随后进入下一轮，生命归零才是唯一结算。`turnOwner`、`battleEntry`、`chapter`、`feedback`、`playedCardId` 与 `handDealId` 维持战斗节奏；`round`、`totalEncounters`、`maxStreak`、`runId` 支持无尽挑战和一次性分数上报。
+`useAnomalyHand.ts` 管理 `select → evolution → battle → reward → defeat`。选择页把当前人物池完整洗牌并铺开；确认后进入可停留的“活体档案”说明页，再开始首场。每一轮由“当前人物池减去玩家所选角色”的全部对手组成，`createRivalEncounterRoster(player, round)` 随机排序并按遭遇序号/轮次计算生命和攻击；清空数组时显示 2,400 ms 的轮次封存章，随后进入下一轮，生命归零才是唯一结算。`turnOwner`、`battleEntry`、`chapter`、`feedback`、`playedCardId` 与 `handDealId` 维持战斗节奏；`round`、`totalEncounters`、`maxStreak`、`runId` 支持无尽挑战和一次性分数上报。
 
 ### 卡牌与序列
 
@@ -63,7 +63,7 @@ anomaly-hand/
 
 ### 敌人与战后强化
 
-三名敌人拥有独立生命、攻击和固定意图 pattern。前两场胜利进入 reward 状态，从 5 个强化中随机显示 3 个；强化写入 `Upgrades` 并影响后续牌值、开场序列、胜后回血或暴露伤害。`selectedRewardId` 单独保存 620 毫秒的装订反馈状态：选中卡保持语义专色与确认章，其余卡禁用并降噪，反馈完成后再初始化下一场。
+当前人物池中的全部未选行动员都可作为敌对档案，拥有固定意图 pattern。除最后一名敌人外，奇数序号的胜利进入 reward 状态，从 5 个强化中随机显示 3 个；强化写入 `Upgrades` 并影响后续牌值、开场序列、胜后回血或暴露伤害。`selectedRewardId` 单独保存 620 毫秒的装订反馈状态：选中卡保持语义专色与确认章，其余卡禁用并降噪，反馈完成后再初始化下一场。
 
 ### 屏幕适配
 

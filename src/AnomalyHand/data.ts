@@ -119,9 +119,6 @@ const RIVAL_PROFILES: Array<Omit<Enemy, 'maxHp' | 'attack'>> = [
   { id: 'rival-john', heroId: 'john', nameKey: 'rival.john.name', subtitleKey: 'rival.john.subtitle', pattern: ['attack', 'guard', 'attack', 'charge'] },
 ]
 
-const RIVAL_HP = [18, 20, 22, 25, 28, 31, 35]
-const RIVAL_ATTACK = [3, 4, 4, 5, 6, 6, 7]
-
 export function createRivalEncounterRoster(playerId: HeroId, round = 1): Enemy[] {
   const rivals = RIVAL_PROFILES.filter(profile => profile.heroId !== playerId)
   for (let index = rivals.length - 1; index > 0; index -= 1) {
@@ -130,8 +127,8 @@ export function createRivalEncounterRoster(playerId: HeroId, round = 1): Enemy[]
   }
   return rivals.map((rival, index) => ({
     ...rival,
-    maxHp: RIVAL_HP[index] + (round - 1) * 8,
-    attack: RIVAL_ATTACK[index] + (round - 1),
+    maxHp: 18 + index * 2 + Math.floor(index * 0.8) + (round - 1) * 8,
+    attack: 3 + Math.floor(index / 2) + (round - 1),
   }))
 }
 
