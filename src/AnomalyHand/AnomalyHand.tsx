@@ -123,6 +123,7 @@ export default function AnomalyHand() {
   const [muted, setMuted] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const leaderboard = useArchiveLeaderboard()
+  const personalCardArt = archive.card?.artUrl ?? archive.card?.portraitUrl
 
   const toggleMuted = () => {
     setMuted(value => {
@@ -171,8 +172,8 @@ export default function AnomalyHand() {
               <p>{t('game.selectSubtitle')}</p>
               {(archive.card || archive.generating || archive.mutations.length > 0) && (
                 <aside className="ah-personal-file" aria-live="polite">
-                  {archive.card ? <img src={archive.card.portraitUrl} alt="" draggable={false} /> : <span className="ah-personal-file__loader" aria-hidden="true" />}
-                  <span>
+                  {personalCardArt ? <span className="ah-personal-file__art"><img src={personalCardArt} alt="" draggable={false} /></span> : <span className="ah-personal-file__loader" aria-hidden="true" />}
+                  <span className="ah-personal-file__copy">
                     <small>{t(archive.card ? 'archive.fileReady' : 'archive.fileQueue')}</small>
                     <b>{archive.card ? archive.card.displayName : t('archive.generating')}</b>
                     {archive.mutations.length > 0 && <em>{t('archive.mutationActive', { n: archive.mutations.length })} · {archive.mutations[archive.mutations.length - 1]?.title}</em>}

@@ -69,9 +69,9 @@ anomaly-hand/
 
 界面是响应式 DOM，不使用整页 transform 缩放。主容器宽度上限 520 px；战斗舞台与手牌通过 CSS Grid 分配。320 × 568 媒体查询把外边距和牌间距压缩，使三张牌保持 104 × 150，顶部图标按钮保持 44 × 44。
 
-### 英雄资产
+### 英雄资产与完整卡面
 
-`data.ts` 静态导入 `img/heroes/cutouts/*.webp`。`HeroArt` 渲染透明人物层，并叠加统一的炭纸背景、青红套印边、裁切角和能力图标带。人物层与框架层分离，因此后续换单个角色不需要复制整张卡或修改战斗逻辑。
+`data.ts` 静态导入 `img/heroes/cutouts/*.webp`，供首发 8 位英雄的战斗状态与战损切换使用。运行时个人档案则不使用这条扣底链路：`usePlayerArchiveCard.ts` 会从 6 个 `ARCHIVE_CARD_STYLES` 中用加密随机数锁定一个方向，将 `pendingStyle` 先持久化，再以头像作身份参考调用 `useGenImage` 生成一张完整场景插画。成功卡保存为 `artUrl` 和 `style`；旧存档的 `portraitUrl` 仅作兼容读取。`AnomalyHand.tsx` 的个人档案预览优先渲染 `artUrl`，Less 用圆角遮罩、细纸边高光和柔和投影承载整张插画，而不是叠加厚重档案框。
 
 ### 界面位图
 
@@ -95,12 +95,13 @@ anomaly-hand/
 
 ### 个人档案、异变与排行榜
 
-`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`，生成中存档防重、4 分钟恢复窗口、3 分钟失败冷却与 210 秒超时均不阻塞对局；4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
+`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`；风格选择在请求前写入 `pendingStyle`，所以 4 分钟生成恢复窗口、3 分钟失败冷却与 210 秒超时后的重试仍会使用同一套卡面方向，不会出现同一人物重进后变成不同风格的卡。旧存档只含 `portraitUrl` 时不再被当作完成卡：它会作为一次身份参考，保留原 ID/姓名/创建时间并升级为 `artUrl`。4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
 
 ## 4. 扩展点
 
 - 增加英雄：在 `data.ts` 添加 Hero，补齐 `i18n/index.ts` 的中英文能力键，并在 `makeSignature()` 与出牌/敌方结算中加入被动和签名效果；把独立肖像放入 `src/AnomalyHand/img/heroes/cutouts/`。
-- 换人物素材：替换对应透明 WebP import；保持头顶/角/耳朵安全区、统一光向和底部落位，不需要改 `HeroArt`。
+- 换首发人物素材：替换对应透明 WebP import；保持头顶/角/耳朵安全区、统一光向和底部落位，不需要改 `HeroArt`。
+- 增加运行时卡面方向：在 `usePlayerArchiveCard.ts` 的 `ARCHIVE_CARD_STYLES` 添加唯一 ID 和完整场景提示词；不得把风格 ID 改为不稳定随机字符串，已生成卡依赖该 ID 复原归档含义。
 - 增加基础牌：在 `BASE_CARDS` 添加定义，并在 `playCard()` 增加结算分支。
 - 调整数值与局长：修改 `data.ts` 的敌人生命/攻击/pattern 和 `useAnomalyHand.ts` 的牌值、回血与序列规则。
 - 增加敌人：在 `ENEMIES` 添加数据，导入对应 WebP 并写入 `ENEMY_ART` 映射；需要独立裁切时再增加 `.ah-enemy-art--<id>`。
