@@ -11,22 +11,21 @@ const OUT = path.join(ROOT, 'src/AnomalyHand/img/card-art')
 const LOG_DIR = path.join(ROOT, '_artifacts/card-art')
 const LOG_PATH = path.join(LOG_DIR, 'generation-log.json')
 const API = 'https://chat.aiwaves.tech/aigram/api/gen-image'
-const STYLE_REFERENCE = 'https://images.aiwaves.tech/uploads/1784442802957-67987r05cyd.png'
 const requestedId = process.argv.find(arg => arg.startsWith('--id='))?.slice(5)
 const force = process.argv.includes('--force')
 
 const CARDS = [
-  ['breach', 'skill', 'A heavy vermilion breach wedge tears through a black armored barrier, sharp fractured diagonal, debris and impact lines, immediate forward violence.'],
-  ['overload', 'skill', 'A sealed anomaly core cracks open under a single jagged vermilion lightning strike, cyan containment rings splitting apart, extreme pressure and heat.'],
-  ['brace', 'skill', 'Three overlapping mint-green defensive plates lock together around a tiny warm core, compact protective geometry, calm resilient posture.'],
-  ['counter', 'skill', 'A cyan deflection arc folds an incoming vermilion strike back toward its source, clean looping counterforce, balanced tension.'],
-  ['probe', 'skill', 'A cyan diagnostic lens with concentric apertures scans an impossible signal fragment, precise radial focus with small red registration sparks.'],
-  ['calibrate', 'skill', 'A mint recovery pulse aligns a broken cyan crosshair and a small warm heartbeat core, careful repair and a restrained upward energy trace.'],
-  ['reward-breach', 'upgrade', 'A vermilion breach wedge becomes larger and sharper, splitting a black plate into decisive clean fragments: permanent offensive amplification.'],
-  ['reward-guard', 'upgrade', 'A pair of mint defense plates grows a second inner layer and locks into a stable shield lattice: permanent protection amplification.'],
-  ['reward-start-sequence', 'upgrade', 'Three oxidized brass sequence rings ignite one after another around a cyan spark, a clear beginning-of-combo ritual with forward momentum.'],
-  ['reward-extra-heal', 'upgrade', 'A small mint restoration vessel releases one concentrated recovery pulse into a cracked dark field, gentle but precise repair.'],
-  ['reward-expose-bonus', 'upgrade', 'A cyan target lattice catches a vermilion fault line and forces it wide open, pressure point revealed for greater exploitation.'],
+  ['breach', 'skill', 'A single vermilion triangular wedge pierces a matte black rectangular bulkhead; clean broken plates, red/white impact burst and cyan debris radiate from the point of contact.'],
+  ['overload', 'skill', 'A sealed black reactor sphere cracks under one vermilion zigzag bolt; three cyan containment rings split apart with controlled shards and heat lines.'],
+  ['brace', 'skill', 'Three overlapping mint hexagonal metal plates close around a tiny warm circular core; compact symmetrical protective construction with a calm cyan aura.'],
+  ['counter', 'skill', 'A cyan curved deflection ribbon catches one vermilion energy line and curls it into a precise returning spiral; balanced radial geometry only.'],
+  ['probe', 'skill', 'A cyan optical aperture with concentric mechanical rings focuses on one tiny fractured red signal crystal; radial diagnostic geometry and red registration sparks.'],
+  ['calibrate', 'skill', 'A mint recovery waveform straightens across a broken cyan crosshair and reconnects a small warm circular core; careful geometric repair.'],
+  ['reward-breach', 'upgrade', 'A larger vermilion triangular wedge splits one black rectangular plate into crisp expanding fragments; abstract permanent force amplification.'],
+  ['reward-guard', 'upgrade', 'A mint hexagonal plate lattice grows a second nested inner layer around a calm cyan dot; abstract permanent protection amplification.'],
+  ['reward-start-sequence', 'upgrade', 'Three oxidized brass rings ignite one after another around a cyan spark; clear sequence progression as abstract concentric geometry.'],
+  ['reward-extra-heal', 'upgrade', 'A small mint glass recovery vessel releases one bright cyan restorative drop into a cracked black mineral field; abstract careful repair.'],
+  ['reward-expose-bonus', 'upgrade', 'A cyan target lattice intersects a vermilion fault line at one exact point, opening the fault into a bright geometric weak spot.'],
 ]
 
 function loadLog() {
@@ -46,7 +45,7 @@ async function generate(prompt, label, log) {
       const response = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Origin: 'https://aigram.app', Referer: 'https://aigram.app/' },
-        body: JSON.stringify({ prompt, ref_url: STYLE_REFERENCE }),
+        body: JSON.stringify({ prompt }),
       })
       const body = await response.json()
       if (!response.ok || !body.url) throw new Error(`HTTP ${response.status}: ${JSON.stringify(body).slice(0, 260)}`)
@@ -83,11 +82,11 @@ async function main() {
       continue
     }
     const prompt = [
-      'Create one original, finished collectible ABILITY TILE for a premium mobile anomaly card battler.',
-      'Use the supplied style reference only for the approved C Anomaly Dossier visual language: charcoal-black stock, signal vermilion and acid cyan screenprint, dry ink gaps, coarse halftone, controlled registration offsets, angular red/cyan field blocks and a narrow black bottom band with four simple geometric marks only: dot, ring, diamond, eight-point star.',
-      `Tile purpose: ${type}. Central symbolic event: ${subject}`,
-      'The central symbol must fill the upper two-thirds and remain unmistakable at a 90 px mobile thumbnail. This is an object/action illustration, not a character portrait, not a UI screenshot, and not a blank icon on a flat background.',
-      'Make one coherent printed picture with material, depth and decisive visual hierarchy. No readable text, letters, numbers, logo, watermark, rune, glyph, flag, human face, or phone interface. Do not add a front-end card frame; the printed edge language is part of the image itself.',
+      'Create one square, full-bleed, nonrepresentational geometric screenprint composition.',
+      'Use this exact visual language: charcoal-black paper stock, signal vermilion and acid cyan screenprint, dry ink gaps, coarse halftone, controlled registration offsets, angular red/cyan field blocks and a narrow black bottom band with four simple geometric marks only: dot, ring, diamond, eight-point star.',
+      `Central geometry: ${subject}`,
+      'The central geometry must fill the upper two-thirds and remain unmistakable at a 90 px mobile thumbnail. Fill the rest with only diagonal bars, concentric circles, rectangular grid panels, triangular fragments, halftone texture, dots and contained energy lines.',
+      'Make one coherent printed picture with material, depth and decisive visual hierarchy. Use no readable text, letters, numbers, title, logo, watermark, rune, glyph, flag, or phone interface. Do not draw a separate front-end card frame; the printed edge language is part of the image itself.',
     ].join(' ')
     const resultUrl = await generate(prompt, id, log)
     await download(resultUrl, outputPath)
