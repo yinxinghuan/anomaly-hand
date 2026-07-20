@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { callAigramAPI, isInAigram, telegramId, type AigramResponse, useChat, useGenImage } from '@shared/runtime'
 import { useGameSave } from '@shared/save'
 
-const IN_FLIGHT_WINDOW_MS = 4 * 60 * 1000
 const FAILURE_COOLDOWN_MS = 3 * 60 * 1000
 const GENERATION_TIMEOUT_MS = 210 * 1000
+const FOREGROUND_DRAWING_MS = 12 * 1000
 const SERIAL_GAP_MS = 3 * 1000
 
 type PlatformProfile = {
@@ -154,8 +154,13 @@ export function usePlayerArchiveCard() {
   const lastOperationAtRef = useRef(0)
   const mountedRef = useRef(true)
 
-  useEffect(() => () => {
-    mountedRef.current = false
+  useEffect(() => {
+    // StrictMode runs setup → cleanup → setup once in development.
+    // The second setup must re-arm this guard for the still-valid archive task.
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
   useEffect(() => {
@@ -172,13 +177,14 @@ export function usePlayerArchiveCard() {
   useEffect(() => {
     if (!armed || !mirror || mirror.card?.artUrl || operationRef.current) return
     const now = Date.now()
-    if (mirror.generation === 'generating' && now - (mirror.requestedAt ?? 0) < IN_FLIGHT_WINDOW_MS) return
     if (mirror.generation === 'failed' && now < (mirror.retryAfter ?? 0)) return
 
-    let cancelled = false
     operationRef.current = 'portrait'
     lastOperationAtRef.current = now
     setGenerating(true)
+    const foregroundTimer = window.setTimeout(() => {
+      if (mountedRef.current) setGenerating(false)
+    }, FOREGROUND_DRAWING_MS)
     const selectedStyle = mirror.pendingStyle ? getArchiveCardStyle(mirror.pendingStyle) : chooseArchiveCardStyle()
     const queued: PlayerArchiveSave = {
       ...mirror,
@@ -215,7 +221,7 @@ export function usePlayerArchiveCard() {
           generate(refUrl ? { prompt, ref_url: refUrl } : { prompt }),
           new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('generation timeout')), GENERATION_TIMEOUT_MS)),
         ])
-        if (cancelled || !mountedRef.current) return
+        if (!mountedRef.current) return
         const completed: PlayerArchiveSave = {
           ...queued,
           version: 2,
@@ -239,7 +245,7 @@ export function usePlayerArchiveCard() {
         setMirror(completed)
         persist(completed)
       } catch {
-        if (cancelled || !mountedRef.current) return
+        if (!mountedRef.current) return
         const failed: PlayerArchiveSave = {
           ...queued,
           version: 2,
@@ -250,13 +256,10 @@ export function usePlayerArchiveCard() {
         persist(failed)
       } finally {
         operationRef.current = null
-        if (!cancelled && mountedRef.current) setGenerating(false)
+        window.clearTimeout(foregroundTimer)
+        if (mountedRef.current) setGenerating(false)
       }
     })()
-
-    return () => {
-      cancelled = true
-    }
   }, [armed, generate, mirror, persist])
 
   useEffect(() => {
