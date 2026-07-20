@@ -1469,46 +1469,142 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
 .ah-vital {
   min-width: 0;
+  padding: 5px 6px 6px;
+  border-left: 3px solid @cyan;
+  background:
+    linear-gradient(90deg, fade(@cyan, 15%), transparent 72%),
+    fade(@ink, 88%);
+  box-shadow: 3px 3px 0 fade(@black, 38%);
 
-  &__meta {
-    margin-bottom: 3px;
+  &__topline {
+    min-height: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 4px;
+    line-height: 1;
+  }
+
+  &__label,
+  &__block {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 3px;
+  }
+
+  &__label {
+    color: @chalk;
+
+    svg {
+      flex: 0 0 auto;
+      color: @cyan;
+    }
+
+    small {
+      overflow: hidden;
+      color: @dust;
+      font: 600 8px/1 "AH Mono", monospace;
+      letter-spacing: .075em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__readout {
+    display: flex;
+    align-items: baseline;
+    margin: 1px 0 4px;
     color: @chalk;
     .ah-number-type();
-    font-size: 13px;
-    line-height: 1;
-    letter-spacing: .035em;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -.02em;
+
+    strong {
+      color: @chalk;
+      font-size: 30px;
+      line-height: .8;
+      text-shadow: 1px 0 0 fade(@cyan, 72%), -1px 0 0 fade(@red, 60%);
+      transform: skewX(-4deg);
+    }
 
     span {
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
+      margin-left: 2px;
+      color: @dust;
+      font-size: 13px;
+      letter-spacing: .015em;
     }
   }
 
   &__block {
+    flex: 0 0 auto;
     color: @mint;
-  }
 
-  &__track {
-    height: 7px;
-    padding: 1px;
-    border: 1px solid fade(@paper, 31%);
-    background: @ink;
+    small {
+      max-width: 50px;
+      overflow: hidden;
+      color: fade(@mint, 82%);
+      font: 600 8px/1 "AH Mono", monospace;
+      letter-spacing: .04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-    span {
-      display: block;
-      height: 100%;
-      background: @cyan;
-      transition: width 180ms steps(6, end);
+    strong {
+      .ah-number-type();
+      font-size: 15px;
+      line-height: 1;
     }
   }
 
-  &--enemy &__track span {
-    background: @red;
+  &__track {
+    position: relative;
+    height: 11px;
+    padding: 2px;
+    overflow: hidden;
+    border: 1px solid fade(@paper, 42%);
+    background: @ink;
+    box-shadow: inset 0 0 0 1px fade(@black, 52%);
+
+    span {
+      position: relative;
+      display: block;
+      height: 100%;
+      min-width: 2px;
+      background: @cyan;
+      transition: width 180ms steps(6, end);
+
+      &::after {
+        position: absolute;
+        inset: 0;
+        content: '';
+        background: repeating-linear-gradient(90deg, transparent 0 8px, fade(@black, 36%) 8px 10px);
+      }
+    }
+  }
+
+  &--enemy {
+    border-left-color: @red;
+    background:
+      linear-gradient(90deg, fade(@red, 17%), transparent 72%),
+      fade(@ink, 88%);
+
+    .ah-vital__label svg {
+      color: @red;
+    }
+
+    .ah-vital__track span {
+      background: @red;
+    }
+  }
+
+  &.is-critical {
+    box-shadow: 3px 3px 0 fade(@black, 38%), 0 0 0 1px fade(@red, 54%);
+
+    .ah-vital__readout strong {
+      color: @paper;
+      text-shadow: 2px 0 0 fade(@red, 82%), -1px 0 0 fade(@cyan, 55%);
+    }
   }
 }
 

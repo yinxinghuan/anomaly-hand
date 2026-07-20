@@ -78,7 +78,7 @@ anomaly-hand/
 
 ### 界面位图
 
-`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID，同时以 `CARD_ART` 与 `REWARD_ART` 映射 6 张行动牌和 5 张强化牌的完整 WebP 象征图。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。战斗网格把桌面固定在层级 1、手牌在 2、`ah-battle__resolution` 在 40；两拍结算不再嵌入舞台，而是由隔离的结果覆盖层承载，底板伪元素只在结果卡内部叠放。行动与强化卡不再使用 SVG 主视觉、折角或多重裁切框：位图直接以圆角遮罩入卡，CSS 只建立文字可读带与选中反馈。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
+`AnomalyHand.tsx` 静态导入三张敌人 WebP 并通过 `ENEMY_ART` 映射到敌人 ID，同时以 `CARD_ART` 与 `REWARD_ART` 映射 6 张行动牌和 5 张强化牌的完整 WebP 象征图。`VitalBar` 计算当前/最大生命比例并输出可访问的 `progressbar`、身份标签、大号当前值、断裂进度条和可选格挡值；生命不再只是卡片边缘的一行微型数字，低于 35% 时增加冗余危险描边。`HeroArt` 与 `EnemyArt` 均将 raster 人物层和可响应的档案框、定位环、扫描层、角标分离；`ah-stage__atmosphere` 输出常态的低频纸屑，`ah-stage__burst` 只在真实命中时输出短促专色纸屑。战斗网格把桌面固定在层级 1、手牌在 2、`ah-battle__resolution` 在 40；两拍结算不再嵌入舞台，而是由隔离的结果覆盖层承载，底板伪元素只在结果卡内部叠放。行动与强化卡不再使用 SVG 主视觉、折角或多重裁切框：位图直接以圆角遮罩入卡，CSS 只建立文字可读带与选中反馈。`AnomalyHand.less` 把 `battle-table.webp` 作为战斗舞台与规则面板的共享纸张底纹，通过裁切位置、暗色遮罩和语义专色区分状态。错误生成的手机框、紫色卡面与人物污染素材不被源码引用，因此不会进入 `dist/`。
 
 ### 字体系统
 

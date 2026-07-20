@@ -57,14 +57,24 @@ function VitalBar({
   block: number
   enemy?: boolean
 }) {
-  const width = `${Math.max(0, Math.min(100, (value / max) * 100))}%`
+  const ratio = Math.max(0, Math.min(1, value / max))
+  const width = `${ratio * 100}%`
+  const healthLabel = t(enemy ? 'feedback.enemyHealth' : 'feedback.playerHealth')
+  const blockLabel = t(enemy ? 'feedback.enemyBlock' : 'feedback.playerBlock')
   return (
-    <div className={`ah-vital ${enemy ? 'ah-vital--enemy' : ''}`}>
-      <div className="ah-vital__meta">
-        <span><Icon name="health" size={15} /> {value}/{max}</span>
-        {block > 0 && <span className="ah-vital__block"><Icon name="guard" size={14} /> {block}</span>}
+    <div className={`ah-vital ${enemy ? 'ah-vital--enemy' : ''} ${ratio <= .35 ? 'is-critical' : ''}`} role="group" aria-label={`${healthLabel} ${value}/${max}`}>
+      <div className="ah-vital__topline">
+        <span className="ah-vital__label"><Icon name="health" size={15} /><small>{healthLabel}</small></span>
+        {block > 0 && (
+          <span className="ah-vital__block">
+            <Icon name="guard" size={14} />
+            <small>{blockLabel}</small>
+            <strong>{block}</strong>
+          </span>
+        )}
       </div>
-      <div className="ah-vital__track"><span style={{ width }} /></div>
+      <div className="ah-vital__readout"><strong>{value}</strong><span>/{max}</span></div>
+      <div className="ah-vital__track" role="progressbar" aria-label={healthLabel} aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}><span style={{ width }} /></div>
     </div>
   )
 }
