@@ -18,6 +18,7 @@ anomaly-hand/
 ├── doc/
 │   ├── requirements.md          # 玩法、数值、控制、胜负与音效蓝图
 │   ├── visual.md                # “异能档案”视觉系统
+│   ├── project-status.md        # 当前发布版本、产品边界与后续交接点
 │   ├── screen-contract.md       # 屏幕、状态、层级与恢复规则
 │   ├── feedback-matrix.md       # 交互反馈与时间设计
 │   ├── technical.md             # 本文档
