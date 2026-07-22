@@ -179,12 +179,12 @@ export default function AnomalyHand() {
               </div>
               <h1>{t('game.title')}</h1>
               <p>{t('game.selectSubtitle')}</p>
-              {(archive.card || archive.generating || archive.mutations.length > 0) && (
+              {(archive.card || archive.generating || archive.backgroundGenerating || archive.mutations.length > 0) && (
                 <aside className="ah-personal-file" aria-live="polite">
                   {personalCardArt ? <span className="ah-personal-file__art"><img src={personalCardArt} alt="" draggable={false} /></span> : <span className="ah-personal-file__loader" aria-hidden="true" />}
                   <span className="ah-personal-file__copy">
-                    <small>{t(archive.card ? 'archive.fileReady' : 'archive.fileDrawing')}</small>
-                    <b>{archive.card ? archive.card.displayName : t('archive.drawing')}</b>
+                    <small>{t(archive.card ? 'archive.fileReady' : archive.generating ? 'archive.fileDrawing' : 'archive.fileQueue')}</small>
+                    <b>{archive.card ? archive.card.displayName : t(archive.generating ? 'archive.drawing' : 'archive.generating')}</b>
                     {archive.mutations.length > 0 && <em>{t('archive.mutationActive', { n: archive.mutations.length })} · {archive.mutations[archive.mutations.length - 1]?.title}</em>}
                   </span>
                 </aside>
@@ -251,7 +251,7 @@ export default function AnomalyHand() {
             <ol className="ah-evolution__steps">
               {[1, 2, 3].map(step => <li key={step}><b>{String(step).padStart(2, '0')}</b><span><strong>{t(`evolution.${step}.title`)}</strong><small>{t(`evolution.${step}.body`)}</small></span></li>)}
             </ol>
-            <div className="ah-evolution__status" aria-live="polite"><Icon name="sequence" size={16} /><span>{archive.generating ? t('archive.fileDrawing') : archive.card ? t('archive.fileReady') : t('evolution.status')}</span></div>
+            <div className="ah-evolution__status" aria-live="polite"><Icon name="sequence" size={16} /><span>{archive.generating ? t('archive.fileDrawing') : archive.backgroundGenerating ? t('archive.fileQueue') : archive.card ? t('archive.fileReady') : t('evolution.status')}</span></div>
             <button className="ah-button ah-button--primary ah-evolution__continue" type="button" onPointerDown={game.continueRun}>{t('evolution.continue')}</button>
           </section>
         )}

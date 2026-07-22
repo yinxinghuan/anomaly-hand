@@ -148,7 +148,11 @@ export function usePlayerArchiveCard() {
     maxHistory: 2,
   })
   const [mirror, setMirror] = useState<PlayerArchiveSave | undefined>(undefined)
-  const [generating, setGenerating] = useState(false)
+  // A foreground acknowledgement is deliberately independent from the remote
+  // generation job. A request can take minutes, be resumed after a reload, or
+  // be left behind in a persisted `generating` save; none of those states may
+  // keep the player-facing "establishing file" copy on screen indefinitely.
+  const [foregroundUntil, setForegroundUntil] = useState(0)
   const [armed, setArmed] = useState(false)
   const operationRef = useRef<'portrait' | 'mutation' | null>(null)
   const lastOperationAtRef = useRef(0)
@@ -175,16 +179,24 @@ export function usePlayerArchiveCard() {
   }, [mirror, savedData])
 
   useEffect(() => {
+    if (!foregroundUntil) return
+    const remaining = foregroundUntil - Date.now()
+    if (remaining <= 0) {
+      setForegroundUntil(0)
+      return
+    }
+    const timer = window.setTimeout(() => setForegroundUntil(0), remaining)
+    return () => window.clearTimeout(timer)
+  }, [foregroundUntil])
+
+  useEffect(() => {
     if (!armed || !mirror || mirror.card?.artUrl || operationRef.current) return
     const now = Date.now()
     if (mirror.generation === 'failed' && now < (mirror.retryAfter ?? 0)) return
 
     operationRef.current = 'portrait'
     lastOperationAtRef.current = now
-    setGenerating(true)
-    const foregroundTimer = window.setTimeout(() => {
-      if (mountedRef.current) setGenerating(false)
-    }, FOREGROUND_DRAWING_MS)
+    setForegroundUntil(now + FOREGROUND_DRAWING_MS)
     const selectedStyle = mirror.pendingStyle ? getArchiveCardStyle(mirror.pendingStyle) : chooseArchiveCardStyle()
     const queued: PlayerArchiveSave = {
       ...mirror,
@@ -256,8 +268,7 @@ export function usePlayerArchiveCard() {
         persist(failed)
       } finally {
         operationRef.current = null
-        window.clearTimeout(foregroundTimer)
-        if (mountedRef.current) setGenerating(false)
+        if (mountedRef.current) setForegroundUntil(0)
       }
     })()
   }, [armed, generate, mirror, persist])
@@ -311,9 +322,13 @@ export function usePlayerArchiveCard() {
     persist(next)
   }, [mirror, persist])
 
+  const foregroundGenerating = foregroundUntil > Date.now()
+  const backgroundGenerating = mirror?.generation === 'generating' && !foregroundGenerating
+
   return {
     card: mirror?.card ?? null,
-    generating,
+    generating: foregroundGenerating,
+    backgroundGenerating,
     mutations: mirror?.mutations ?? [],
     mutationGenerating: mutating || operationRef.current === 'mutation',
     archiveRival,

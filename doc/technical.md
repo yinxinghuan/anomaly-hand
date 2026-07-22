@@ -99,7 +99,7 @@ anomaly-hand/
 
 ### 个人档案、异变与排行榜
 
-`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`；风格选择在请求前写入 `pendingStyle`，所以失败冷却与 210 秒超时后的重试仍会使用同一套卡面方向，不会出现同一人物重进后变成不同风格的卡。前端没有可恢复的远端任务 ID，因此页面重新建立后，未完成的 `generating` 记录会在用户接入时重新发起一次，而不是错误地等待一个已丢失的 Promise。存档写入不会取消已开始的生图任务，只有组件卸载才阻止其回写；挂载保护会在 React StrictMode 的二次 effect setup 中重新启用，避免把有效任务误判为已卸载。生成是严格后台任务：前台“正在建立档案”反馈最多显示 12 秒，之后选人和活体档案页回到常规文案，不会把未完成请求永久表现为前台加载。旧存档只含 `portraitUrl` 时不再被当作完成卡：它会作为一次身份参考，保留原 ID/姓名/创建时间并升级为 `artUrl`。4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
+`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`；风格选择在请求前写入 `pendingStyle`，所以失败冷却与 210 秒超时后的重试仍会使用同一套卡面方向，不会出现同一人物重进后变成不同风格的卡。前端没有可恢复的远端任务 ID，因此页面重新建立后，未完成的 `generating` 记录会在用户接入时重新发起一次，而不是错误地等待一个已丢失的 Promise。存档写入不会取消已开始的生图任务，只有组件卸载才阻止其回写；挂载保护会在 React StrictMode 的二次 effect setup 中重新启用，避免把有效任务误判为已卸载。前台反馈和远端任务是两个状态：新请求只把 `foregroundUntil` 设为当前时间加 12 秒；倒计时结束后，或读取到遗留的 `generation: 'generating'` 存档时，界面改为 `archive.fileQueue` 的后台归档态。这样未完成、重试或超时中的生图仍可继续，但绝不再占用“正在建立档案”的前台提示。旧存档只含 `portraitUrl` 时不再被当作完成卡：它会作为一次身份参考，保留原 ID/姓名/创建时间并升级为 `artUrl`。4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
 
 ## 4. 扩展点
 
