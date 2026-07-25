@@ -1,5 +1,9 @@
 # Anomaly Hand / 异常手牌
 
+## Third-party attribution
+
+Tactical-card holographic finish adapts [CSS Holographic Masks](https://codepen.io/HejChristian/pen/YPzLbYX) by Christian Alder, under the MIT License. Full notice and local modifications: [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt).
+
 A portrait-driven endless mobile card battler. Read the enemy's next intent, play one of three tactical cards, build sequence, deploy each operative's signature order, and keep sealing the full rival roster until your health reaches zero.
 
 Current release: `fac313f` (2026-07-21). The live game is available at [yinxinghuan.github.io/anomaly-hand](https://yinxinghuan.github.io/anomaly-hand/).

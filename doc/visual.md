@@ -14,13 +14,13 @@
 - Orientation and aspect ratios：主界面响应式竖屏，设计基准 390 × 844；最低支持 320 × 568，桌面最大内容宽度 520。
 - Camera and perspective：英雄与敌人统一胸像三分之四视角，视线朝向画面中心；轻微仰视不超过 6°。
 - Playfield focal area：敌我舞台占屏幕高度 42%–48%，三张手牌占 29%–34%。
-- Foreground, midground, background：前景为出牌碎片和伤害章；中景为英雄/敌人卡；背景为低对比档案纸、装订线和裁切标记。
+- Foreground, midground, background：前景为出牌碎片和伤害章；中景为英雄/敌人卡；背景是干净的近黑档案桌面，只保留低对比桌面纹理和底部暗角，不常驻显示网点、斜线、漂浮几何或大号档案文字。
 - HUD safe areas：顶部预留 `max(16px, env(safe-area-inset-top))`；底部牌区与 Home Indicator 之间至少 12 px + safe area。
 - Attention path：敌人意图 → 双方生命 → 三张手牌 → 序列轨 → 临时结果。
 
 ## 3. Color
 
-- Background：Archive Black `#111315`。
+- Background：Archive Black `#111315 → #090B0C`；战斗舞台仅保留原始档案桌面的低对比纹理与底部暗角，避免和彩色战术牌竞争。
 - Raised surface：Carbon Board `#1B1E20`。
 - Paper edge：Bone Stock `#E9E1D0`。
 - Primary text：Chalk `#F3EFE5`。
@@ -50,7 +50,7 @@
 - Borders：结构边 1 px 骨白 35% 透明；关键选中态增加 2 px 青蓝实体边。
 - Shadows：常规 UI 使用硬边印刷阴影，偏移 3–5 px，透明度 25%–38%；完整收藏卡可使用 `0 9px 20px` 的柔和炭黑投影，帮助画内边界像可握持卡片一样从背景中分离。
 - Materials：再生炭纸、粗网点油墨、干刷缺墨、细小套印偏移、少量黄铜铆钉。
-- Lighting：人物主光从左上 35° 进入，右侧用低强度青蓝边光；背景不做电影级光污染。
+- Lighting：人物主光从左上 35° 进入，右侧用低强度青蓝边光；背景不做电影级光污染、常驻光斑或扫描线。
 
 ## 6. Characters, environments, and assets
 

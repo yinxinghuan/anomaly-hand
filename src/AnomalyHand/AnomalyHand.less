@@ -68,10 +68,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% -12%, fade(@cyan, 8%), transparent 35%),
-    repeating-linear-gradient(90deg, transparent 0 82px, fade(@paper, 2%) 83px, transparent 84px),
-    #080a0b;
+  background: #080a0b;
 }
 
 .ah {
@@ -82,11 +79,7 @@
   overflow: hidden;
   isolation: isolate;
   color: @chalk;
-  background:
-    radial-gradient(ellipse at 51% 32%, fade(@red, 5%), transparent 38%),
-    linear-gradient(90deg, transparent 20px, fade(@paper, 6%) 21px, transparent 22px),
-    linear-gradient(180deg, fade(@paper, 3%), transparent 30%),
-    @black;
+  background: linear-gradient(180deg, #111416 0%, @ink 100%);
   font-family: @font-body;
   font-kerning: normal;
   user-select: none;
@@ -98,8 +91,7 @@
     inset: 8px;
     z-index: -1;
     pointer-events: none;
-    border: 1px solid fade(@paper, 5%);
-    clip-path: polygon(0 0, 94% 0, 100% 4%, 100% 100%, 5% 100%, 0 96%);
+    border: 1px solid fade(@paper, 3%);
   }
 
   button {
@@ -113,13 +105,8 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.44;
-    background-image:
-      repeating-linear-gradient(0deg, transparent 0 3px, fade(@paper, 2%) 4px),
-      radial-gradient(circle at 16% 25%, fade(@paper, 10%) 0 0.65px, transparent 0.8px),
-      radial-gradient(circle at 73% 66%, fade(@red, 9%) 0 0.6px, transparent 0.78px);
-    background-size: auto, 7px 9px, 11px 13px;
-    mix-blend-mode: screen;
+    opacity: 0.11;
+    background: repeating-linear-gradient(0deg, transparent 0 5px, fade(@paper, 2%) 6px);
   }
 
   &.is-impact-signature::after {
@@ -896,6 +883,20 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     pointer-events: none;
   }
 
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg, #ee4d90 7%, #f5d55a 26%, #52e4c9 45%, #4c8eff 64%, #bd5bea 82%, #ee4d90 100%);
+    background-position: 0% 50%;
+    background-size: 240% 240%;
+    mix-blend-mode: color-dodge;
+    opacity: .32;
+    animation: ah-card-foil 6.4s ease-in-out infinite alternate;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -916,6 +917,9 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     outline: 2px solid @paper;
     outline-offset: 1px;
   }
+
+  &:hover::after,
+  &:focus-visible::after { opacity: .54; animation-duration: 2.8s; }
 
   &.is-selected {
     border: 2px solid @cyan;
@@ -1099,34 +1103,19 @@ html[lang="zh-CN"] .ah-reward-card > strong {
   min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(circle at 52% 45%, fade(@cyan, 10%), transparent 24%),
-    linear-gradient(fade(@ink, 42%), fade(@ink, 58%)),
-    url("./img/interface/battle-table.webp") center 46% / cover,
-    linear-gradient(146deg, transparent 0 55%, fade(@cyan, 7%) 55% 55.4%, transparent 55.4%),
-    repeating-linear-gradient(90deg, transparent 0 27px, fade(@paper, 3%) 28px),
-    fade(@ink, 18%);
+    linear-gradient(180deg, fade(@ink, 32%), fade(@ink, 71%)),
+    url("./img/interface/battle-table.webp") center 46% / cover;
 
-  &::before {
-    content: "CASE MATERIAL / ACTIVE";
-    position: absolute;
-    top: 44%;
-    left: 50%;
-    color: fade(@paper, 11%);
-    font: 500 21px/1 "AH Mono", monospace;
-    letter-spacing: .14em;
-    transform: translate(-50%, -50%) rotate(-90deg);
-    white-space: nowrap;
-  }
+  &::before { display: none; }
 
   &::after {
     content: "";
     position: absolute;
     z-index: 1;
-    inset: 7px;
+    inset: 0;
     pointer-events: none;
-    border: 1px solid fade(@paper, 13%);
-    clip-path: polygon(0 0, 94% 0, 100% 7%, 100% 100%, 7% 100%, 0 93%);
-    box-shadow: inset 0 0 0 7px fade(@ink, 18%);
+    border: 0;
+    box-shadow: inset 0 -26px 32px fade(@ink, 42%);
   }
 
   &__atmosphere {
@@ -1135,7 +1124,7 @@ html[lang="zh-CN"] .ah-reward-card > strong {
     z-index: 2;
     overflow: hidden;
     pointer-events: none;
-    opacity: .8;
+    display: none;
 
     i {
       position: absolute;
@@ -2896,9 +2885,12 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 }
 
 @keyframes ah-card-foil {
-  0%, 72%, 100% { filter: brightness(1); opacity: 1; }
-  80% { filter: brightness(1.65) saturate(1.2); opacity: .92; }
-  88% { filter: brightness(1.08); }
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-card::after { animation: none; background-position: 42% 50%; }
 }
 
 @keyframes ah-enemy-hit {
