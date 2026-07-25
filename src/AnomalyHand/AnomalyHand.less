@@ -543,7 +543,17 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
   &::before,
   &::after {
-    display: none;
+    content: "";
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(112deg, transparent 15%, rgba(255,255,255,.18) 34%, transparent 43%), linear-gradient(115deg, #ee4d90 7%, #f5d55a 26%, #52e4c9 45%, #4c8eff 64%, #bd5bea 82%, #ee4d90 100%);
+    background-position: 0% 50%, 0% 50%;
+    background-size: 250% 250%, 250% 250%;
+    mix-blend-mode: color-dodge;
+    opacity: .3;
+    animation: ah-card-foil 5.4s ease-in-out infinite alternate;
   }
 
   img {
@@ -1332,6 +1342,20 @@ html[lang="zh-CN"] .ah-reward-card > strong {
 
     &::before {
       display: none;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(112deg, transparent 16%, rgba(255,255,255,.15) 35%, transparent 44%), linear-gradient(115deg, #ee4d90 7%, #f5d55a 26%, #52e4c9 45%, #4c8eff 64%, #bd5bea 82%, #ee4d90 100%);
+      background-position: 0% 50%, 0% 50%;
+      background-size: 250% 250%, 250% 250%;
+      mix-blend-mode: color-dodge;
+      opacity: .26;
+      animation: ah-card-foil 5.6s ease-in-out infinite alternate;
     }
   }
 
