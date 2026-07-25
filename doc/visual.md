@@ -14,7 +14,7 @@
 - Orientation and aspect ratios：主界面响应式竖屏，设计基准 390 × 844；最低支持 320 × 568，桌面最大内容宽度 520。
 - Camera and perspective：英雄与敌人统一胸像三分之四视角，视线朝向画面中心；轻微仰视不超过 6°。
 - Playfield focal area：敌我舞台占屏幕高度 42%–48%，三张手牌占 29%–34%。
-- Foreground, midground, background：前景为出牌碎片和伤害章；中景为英雄/敌人卡；背景是干净的近黑档案桌面，只保留低对比桌面纹理和底部暗角，不常驻显示网点、斜线、漂浮几何或大号档案文字。
+- Foreground, midground, background：前景为出牌碎片和伤害章；中景为英雄/敌人卡；背景是干净的近黑渐变与底部暗角，不常驻显示桌面图片、网点、斜线、漂浮几何或大号档案文字。
 - HUD safe areas：顶部预留 `max(16px, env(safe-area-inset-top))`；底部牌区与 Home Indicator 之间至少 12 px + safe area。
 - Attention path：敌人意图 → 双方生命 → 三张手牌 → 序列轨 → 临时结果。
 
