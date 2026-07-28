@@ -6,7 +6,7 @@
 - Less 负责响应式布局、位图裁切/遮罩、卡牌视觉和动效。
 - Vite 5 构建，`base: './'`，生产输出位于 `dist/`，资源路径可在任意部署子目录运行。
 - Web Audio API 合成纸张、机械定位、命中、护盾、受伤、签名技、评级、发牌和结算多层音效；首次用户操作后才创建 `AudioContext`，压缩器限制峰值。
-- 8 位英雄各使用独立完整 WebP 卡面；人物、场景、方向边界与几何能力带由 Aigram transit raster 流程在同一图中生成，CSS 只负责圆角遮罩、受击专色和可读 UI。
+- 8 位首发英雄各使用独立完整 WebP 卡面；运行时生成的个人卡作为动态第 9 位行动员复用同一展示组件。人物、场景、方向边界与几何能力带由 Aigram transit raster 流程在同一图中生成，CSS 只负责圆角遮罩、受击专色和可读 UI。
 - 未选英雄复用同一完整 WebP 卡面并以敌对档案筛网进入战斗；6 张基础行动牌与 5 张强化牌使用独立生成的 C「异能档案」WebP 象征卡图。
 - `src/shared/` 提供存档、头像生图、模型异变和按永久游戏 UUID 分区的平台排行榜请求。
 - 轻量 `i18n` 模块支持中文与英文，通过 `localStorage.game_locale` 覆盖或浏览器语言自动检测。
@@ -59,11 +59,11 @@ anomaly-hand/
 
 ### 状态管理与回合
 
-`useAnomalyHand.ts` 管理 `select → evolution → battle → reward → defeat`。选择页把当前人物池完整洗牌并铺开；确认后进入可停留的“活体档案”说明页，再开始首场。每一轮由“当前人物池减去玩家所选角色”的全部对手组成，`createRivalEncounterRoster(player, round)` 随机排序并按遭遇序号/轮次计算生命和攻击；清空数组时显示 2,400 ms 的轮次封存章，随后进入下一轮，生命归零才是唯一结算。`turnOwner`、`battleEntry`、`chapter`、`feedback`、`playedCardId` 与 `handDealId` 维持战斗节奏；`round`、`totalEncounters`、`maxStreak`、`runId` 支持无尽挑战和一次性分数上报。
+`useAnomalyHand.ts` 管理 `select → evolution → battle → reward → defeat`。没有个人卡时，选择页从 8 位首发行动员随机抽取 5 位；有个人卡时由个人卡固定占 1 位并随机补 4 位首发行动员。确认后进入可停留的“活体档案”说明页，再开始首场。选择首发角色时，每轮敌人是其余 7 位首发行动员；选择个人角色时，全部 8 位首发行动员依次成为敌对档案。`createRivalEncounterRoster(player, round)` 随机排序并按遭遇序号/轮次计算生命和攻击；清空数组时显示 2,400 ms 的轮次封存章，随后进入下一轮，生命归零才是唯一结算。`turnOwner`、`battleEntry`、`chapter`、`feedback`、`playedCardId` 与 `handDealId` 维持战斗节奏；`round`、`totalEncounters`、`maxStreak`、`runId` 支持无尽挑战和一次性分数上报。
 
 ### 卡牌与序列
 
-`data.ts` 定义 6 张基础牌和 8 位英雄。每回合随机抽取 3 张不重复牌；连续使用不同类别增加序列。序列达到 3 时，`makeHand()` 把最右牌替换为当前英雄的签名牌。8 位英雄的被动和签名技在 `playCard()` 与敌方意图结算中处理；临时状态包括 Smith 的怒意、Isabel 的首次恢复、G€tü 的动能与 KI_Bo 的预见序列。
+`data.ts` 定义 6 张基础牌和 8 套首发战斗原型。每个 `Hero` 同时包含界面身份 `id` 与战斗身份 `combatProfileId`；首发两者相同，个人卡的界面身份固定为 `personal`，战斗身份从存档读取。每回合随机抽取 3 张不重复牌；连续使用不同类别增加序列。序列达到 3 时，`makeHand()` 按战斗身份把最右牌替换为对应签名牌。8 套被动和签名技在 `playCard()` 与敌方意图结算中处理；临时状态包括 Smith 的怒意、Isabel 的首次恢复、G€tü 的动能与 KI_Bo 的预见序列。
 
 ### 敌人与战后强化
 
@@ -99,11 +99,11 @@ anomaly-hand/
 
 ### 个人档案、异变与排行榜
 
-`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。首次点击接入才读取公开资料并调用 `useGenImage`；风格选择在请求前写入 `pendingStyle`，所以失败冷却与 210 秒超时后的重试仍会使用同一套卡面方向，不会出现同一人物重进后变成不同风格的卡。前端没有可恢复的远端任务 ID，因此页面重新建立后，未完成的 `generating` 记录会在用户接入时重新发起一次，而不是错误地等待一个已丢失的 Promise。存档写入不会取消已开始的生图任务，只有组件卸载才阻止其回写；挂载保护会在 React StrictMode 的二次 effect setup 中重新启用，避免把有效任务误判为已卸载。前台反馈和远端任务是两个状态：新请求只把 `foregroundUntil` 设为当前时间加 12 秒；倒计时结束后，或读取到遗留的 `generation: 'generating'` 存档时，界面改为 `archive.fileQueue` 的后台归档态。这样未完成、重试或超时中的生图仍可继续，但绝不再占用“正在建立档案”的前台提示。旧存档只含 `portraitUrl` 时不再被当作完成卡：它会作为一次身份参考，保留原 ID/姓名/创建时间并升级为 `artUrl`。4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
+`usePlayerArchiveCard.ts` 用 `useGameSave` 的本地镜像保存个人行动员卡、敌对记录和异变。存档 v3 为个人卡增加 `combatProfileId`；已有 v2 卡按稳定卡片 ID 确定性映射到 8 套首发原型并立即回写，因此同一卡在刷新和跨设备恢复后不会改变能力。首次点击接入才读取公开资料并调用 `useGenImage`；风格选择在请求前写入 `pendingStyle`，所以失败冷却与 210 秒超时后的重试仍会使用同一套卡面方向，不会出现同一人物重进后变成不同风格的卡。前端没有可恢复的远端任务 ID，因此页面重新建立后，未完成的 `generating` 记录会在用户接入时重新发起一次，而不是错误地等待一个已丢失的 Promise。所有写入先进入同一个 `mirrorRef` 最新镜像，再作为副作用调用 `persist()`；生图完成、失败、异变完成和敌人归档都从最新镜像合并，避免后台异步结果把战斗期间新增的 `rivalIds` 或异变覆盖掉。存档写入不会取消已开始的生图任务，只有组件卸载才阻止其回写；挂载保护会在 React StrictMode 的二次 effect setup 中重新启用，避免把有效任务误判为已卸载。前台反馈和远端任务是两个状态：新请求只把 `foregroundUntil` 设为当前时间加 12 秒；倒计时结束后，或读取到遗留的 `generation: 'generating'` 存档时，界面改为 `archive.fileQueue` 的后台归档态。这样未完成、重试或超时中的生图仍可继续，但绝不再占用“正在建立档案”的前台提示。旧存档只含 `portraitUrl` 时不再被当作完成卡：它会作为一次身份参考，保留原 ID/姓名/创建时间并升级为 `artUrl`。4/8/12 张记录时串行调用 `useChat`，只接受白名单中的异变效果。`AnomalyHand.tsx` 把完成的个人卡转换成动态 `Hero` 并传给单局状态机，所以选择页、战斗页和结算页使用同一张生成卡面。`useArchiveLeaderboard.ts` 只在 Aigram 和永久 UUID 存在时调用 `/rank/score/save` 与 `/rank/score/list/by/session_id`；同一 `runId` 只上报一次，榜单的非本人行通过 `openAigramProfile` 打开资料。
 
 ## 4. 扩展点
 
-- 增加英雄：在 `data.ts` 添加 Hero，补齐 `i18n/index.ts` 的中英文能力键，并在 `makeSignature()` 与出牌/敌方结算中加入被动和签名效果；把完整卡面放入 `src/AnomalyHand/img/heroes/full/`。
+- 增加首发英雄或战斗原型：在 `types.ts` 扩展 `BaseHeroId`，在 `data.ts` 添加 Hero，补齐 `i18n/index.ts` 的中英文能力键，并在 `makeSignature()` 与出牌/敌方结算中加入被动和签名效果；同步把新 ID 加入 `usePlayerArchiveCard.ts` 的稳定原型列表，并把完整卡面放入 `src/AnomalyHand/img/heroes/full/`。
 - 换首发人物素材：替换对应完整 WebP import；保持脸、眼睛、角/耳朵/伙伴等身份锚点在裁切安全区内，不需要改 `HeroArt`。
 - 增加运行时卡面方向：先在 `usePlayerArchiveCard.ts` 的 `ARCHIVE_CARD_STYLES` 添加唯一 ID、整卡构图提示词与审核样张；通过视觉验收后才加入 `ACTIVE_ARCHIVE_CARD_STYLES`，不得把风格 ID 改为不稳定随机字符串，已生成卡依赖该 ID 复原归档含义。
 - 增加基础牌：在 `BASE_CARDS` 添加定义，并在 `playCard()` 增加结算分支。

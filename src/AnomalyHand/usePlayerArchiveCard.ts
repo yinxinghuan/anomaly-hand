@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { callAigramAPI, isInAigram, telegramId, type AigramResponse, useChat, useGenImage } from '@shared/runtime'
 import { useGameSave } from '@shared/save'
+import type { BaseHeroId } from './types'
 
 const FAILURE_COOLDOWN_MS = 3 * 60 * 1000
 const GENERATION_TIMEOUT_MS = 210 * 1000
@@ -21,6 +22,7 @@ export type PlayerArchiveCard = {
   source: 'avatar' | 'anonymous'
   displayName: string
   style?: ArchiveCardStyleId
+  combatProfileId: BaseHeroId
   createdAt: number
 }
 
@@ -44,7 +46,7 @@ export type ArchiveMutation = {
 }
 
 type PlayerArchiveSave = {
-  version: 2
+  version: 3
   card?: PlayerArchiveCard
   generation: 'idle' | 'generating' | 'failed' | 'complete'
   requestedAt?: number
@@ -55,7 +57,8 @@ type PlayerArchiveSave = {
   pendingMutationAt?: number
 }
 
-const EMPTY_SAVE: PlayerArchiveSave = { version: 2, generation: 'idle', rivalIds: [], mutations: [] }
+const EMPTY_SAVE: PlayerArchiveSave = { version: 3, generation: 'idle', rivalIds: [], mutations: [] }
+const COMBAT_PROFILE_IDS: BaseHeroId[] = ['las', 'isabel', 'smith', 'goat', 'getu', 'chill', 'kibo', 'john']
 const MAX_MUTATIONS = 3
 const MUTATION_EFFECTS: MutationEffect[] = ['breachBoost', 'guardBoost', 'techSequence', 'recoveryProtocol', 'chargeShield']
 const FALLBACK_MUTATION: Omit<ArchiveMutation, 'id' | 'triggerAt' | 'createdAt'> = {
@@ -105,6 +108,15 @@ function isPublicHttps(value: unknown): value is string {
   return typeof value === 'string' && /^https:\/\//i.test(value)
 }
 
+function stableCombatProfileId(cardId: string): BaseHeroId {
+  let hash = 2166136261
+  for (let index = 0; index < cardId.length; index += 1) {
+    hash ^= cardId.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return COMBAT_PROFILE_IDS[(hash >>> 0) % COMBAT_PROFILE_IDS.length]
+}
+
 function chooseArchiveCardStyle(): ArchiveCardStyle {
   const index = typeof crypto !== 'undefined' && crypto.getRandomValues
     ? crypto.getRandomValues(new Uint32Array(1))[0] % ACTIVE_ARCHIVE_CARD_STYLES.length
@@ -148,6 +160,12 @@ export function usePlayerArchiveCard() {
     maxHistory: 2,
   })
   const [mirror, setMirror] = useState<PlayerArchiveSave | undefined>(undefined)
+  const mirrorRef = useRef<PlayerArchiveSave | undefined>(undefined)
+  const commitSave = useCallback((next: PlayerArchiveSave) => {
+    mirrorRef.current = next
+    setMirror(next)
+    persist(next)
+  }, [persist])
   // A foreground acknowledgement is deliberately independent from the remote
   // generation job. A request can take minutes, be resumed after a reload, or
   // be left behind in a persisted `generating` save; none of those states may
@@ -169,14 +187,30 @@ export function usePlayerArchiveCard() {
 
   useEffect(() => {
     if (mirror === undefined && savedData !== undefined) {
-      setMirror({
+      const raw = savedData as (Omit<PlayerArchiveSave, 'version' | 'card'> & {
+        version?: number
+        card?: Omit<PlayerArchiveCard, 'combatProfileId'> & { combatProfileId?: BaseHeroId }
+      }) | null
+      const normalized: PlayerArchiveSave = {
         ...EMPTY_SAVE,
-        ...(savedData ?? {}),
-        rivalIds: savedData?.rivalIds ?? [],
-        mutations: savedData?.mutations ?? [],
-      })
+        ...(raw ?? {}),
+        version: 3,
+        card: raw?.card
+          ? {
+              ...raw.card,
+              combatProfileId: raw.card.combatProfileId ?? stableCombatProfileId(raw.card.id),
+            }
+          : undefined,
+        rivalIds: raw?.rivalIds ?? [],
+        mutations: raw?.mutations ?? [],
+      }
+      mirrorRef.current = normalized
+      setMirror(normalized)
+      if (raw && (raw.version !== 3 || (raw.card && !raw.card.combatProfileId))) {
+        persist(normalized)
+      }
     }
-  }, [mirror, savedData])
+  }, [mirror, persist, savedData])
 
   useEffect(() => {
     if (!foregroundUntil) return
@@ -200,14 +234,13 @@ export function usePlayerArchiveCard() {
     const selectedStyle = mirror.pendingStyle ? getArchiveCardStyle(mirror.pendingStyle) : chooseArchiveCardStyle()
     const queued: PlayerArchiveSave = {
       ...mirror,
-      version: 2,
+      version: 3,
       generation: 'generating',
       requestedAt: now,
       retryAfter: undefined,
       pendingStyle: selectedStyle.id,
     }
-    setMirror(queued)
-    persist(queued)
+    commitSave(queued)
 
     void (async () => {
       let profile: PlatformProfile | null = null
@@ -234,44 +267,46 @@ export function usePlayerArchiveCard() {
           new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('generation timeout')), GENERATION_TIMEOUT_MS)),
         ])
         if (!mountedRef.current) return
+        const latest = mirrorRef.current ?? queued
+        const cardId = latest.card?.id ?? `player-archive-${telegramId ?? 'browser'}-${now}`
         const completed: PlayerArchiveSave = {
-          ...queued,
-          version: 2,
+          ...latest,
+          version: 3,
           generation: 'complete',
           pendingStyle: undefined,
           pendingMutationAt: (() => {
-            const threshold = Math.min(MAX_MUTATIONS * 4, Math.floor((queued.rivalIds.length + 1) / 4) * 4)
-            return threshold > 0 && !queued.mutations.some(mutation => mutation.triggerAt === threshold)
+            const threshold = Math.min(MAX_MUTATIONS * 4, Math.floor((latest.rivalIds.length + 1) / 4) * 4)
+            return threshold > 0 && !latest.mutations.some(mutation => mutation.triggerAt === threshold)
               ? threshold
-              : queued.pendingMutationAt
+              : latest.pendingMutationAt
           })(),
           card: {
-            id: mirror.card?.id ?? `player-archive-${telegramId ?? 'browser'}-${now}`,
+            id: cardId,
             artUrl,
-            source: mirror.card?.source ?? (refUrl ? 'avatar' : 'anonymous'),
+            source: latest.card?.source ?? (refUrl ? 'avatar' : 'anonymous'),
             displayName,
             style: selectedStyle.id,
-            createdAt: mirror.card?.createdAt ?? Date.now(),
+            combatProfileId: latest.card?.combatProfileId ?? stableCombatProfileId(cardId),
+            createdAt: latest.card?.createdAt ?? Date.now(),
           },
         }
-        setMirror(completed)
-        persist(completed)
+        commitSave(completed)
       } catch {
         if (!mountedRef.current) return
+        const latest = mirrorRef.current ?? queued
         const failed: PlayerArchiveSave = {
-          ...queued,
-          version: 2,
+          ...latest,
+          version: 3,
           generation: 'failed',
           retryAfter: Date.now() + FAILURE_COOLDOWN_MS,
         }
-        setMirror(failed)
-        persist(failed)
+        commitSave(failed)
       } finally {
         operationRef.current = null
         if (mountedRef.current) setForegroundUntil(0)
       }
     })()
-  }, [armed, generate, mirror, persist])
+  }, [armed, commitSave, generate, mirror])
 
   useEffect(() => {
     if (!armed || !mirror?.pendingMutationAt || operationRef.current || mirror.mutations.length >= MAX_MUTATIONS) return
@@ -287,16 +322,17 @@ export function usePlayerArchiveCard() {
       .catch(() => FALLBACK_MUTATION)
       .then(mutation => {
         if (cancelled || !mountedRef.current) return
+        const latest = mirrorRef.current ?? mirror
+        if (latest.mutations.some(item => item.triggerAt === triggerAt)) return
         const next: PlayerArchiveSave = {
-          ...mirror,
+          ...latest,
           pendingMutationAt: undefined,
           mutations: [
-            ...mirror.mutations,
+            ...latest.mutations,
             { ...mutation, id: `mutation-${triggerAt}-${Date.now()}`, triggerAt, createdAt: Date.now() },
           ],
         }
-        setMirror(next)
-        persist(next)
+        commitSave(next)
       })
       .finally(() => {
         operationRef.current = null
@@ -305,22 +341,22 @@ export function usePlayerArchiveCard() {
     return () => {
       cancelled = true
     }
-  }, [armed, generateMutation, mirror, persist])
+  }, [armed, commitSave, generateMutation, mirror])
 
   const archiveRival = useCallback((rivalId: string) => {
-    if (!mirror || mirror.rivalIds.includes(rivalId)) return
-    const rivalIds = [...mirror.rivalIds, rivalId]
-    const totalCards = rivalIds.length + (mirror.card ? 1 : 0)
+    const latest = mirrorRef.current
+    if (!latest || latest.rivalIds.includes(rivalId)) return
+    const rivalIds = [...latest.rivalIds, rivalId]
+    const totalCards = rivalIds.length + (latest.card ? 1 : 0)
     const threshold = Math.min(MAX_MUTATIONS * 4, Math.floor(totalCards / 4) * 4)
-    const alreadyGenerated = mirror.mutations.some(mutation => mutation.triggerAt === threshold)
+    const alreadyGenerated = latest.mutations.some(mutation => mutation.triggerAt === threshold)
     const next: PlayerArchiveSave = {
-      ...mirror,
+      ...latest,
       rivalIds,
-      pendingMutationAt: threshold > 0 && !alreadyGenerated ? threshold : mirror.pendingMutationAt,
+      pendingMutationAt: threshold > 0 && !alreadyGenerated ? threshold : latest.pendingMutationAt,
     }
-    setMirror(next)
-    persist(next)
-  }, [mirror, persist])
+    commitSave(next)
+  }, [commitSave])
 
   const foregroundGenerating = foregroundUntil > Date.now()
   const backgroundGenerating = mirror?.generation === 'generating' && !foregroundGenerating

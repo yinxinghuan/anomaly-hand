@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { BASE_CARDS, createRivalEncounterRoster, HEROES, REWARDS } from './data'
+import { BASE_CARDS, createRivalEncounterRoster, getCombatProfile, HEROES, REWARDS } from './data'
 import { sound } from './audio'
 import { t } from './i18n'
-import type { ActionCard, CardKind, CombatFeedback, Enemy, Hero, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
+import type { ActionCard, BaseHeroId, CardKind, CombatFeedback, Enemy, Hero, HeroId, Intent, Phase, Rating, RewardId, Upgrades } from './types'
 import type { MutationEffect } from './usePlayerArchiveCard'
 
 const MAX_HP = 30
@@ -39,8 +39,14 @@ function sample<T>(items: T[], count: number) {
   return [...items].sort(() => Math.random() - 0.5).slice(0, count)
 }
 
-function makeSignature(heroId: HeroId): ActionCard {
-  const hero = HEROES.find(item => item.id === heroId)!
+function createDraft(personalHero?: Hero) {
+  return personalHero
+    ? [personalHero, ...sample(HEROES, SELECT_CANDIDATE_COUNT - 1)]
+    : sample(HEROES, SELECT_CANDIDATE_COUNT)
+}
+
+function makeSignature(heroId: BaseHeroId): ActionCard {
+  const hero = getCombatProfile(heroId)
   return {
     id: `signature-${heroId}`,
     kind: 'signature',
@@ -49,7 +55,7 @@ function makeSignature(heroId: HeroId): ActionCard {
   }
 }
 
-function makeHand(sequence: number, heroId: HeroId) {
+function makeHand(sequence: number, heroId: BaseHeroId) {
   const cards = sample(BASE_CARDS, 3)
   if (sequence >= 3) cards[2] = makeSignature(heroId)
   return cards
@@ -59,11 +65,12 @@ type AnomalyHandOptions = {
   mutationEffects?: MutationEffect[]
   onRunStart?: () => void
   onEnemyDefeated?: (rivalId: string) => void
+  personalHero?: Hero
 }
 
-export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeated }: AnomalyHandOptions = {}) {
+export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeated, personalHero }: AnomalyHandOptions = {}) {
   const [phase, setPhase] = useState<Phase>('select')
-  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => sample(HEROES, SELECT_CANDIDATE_COUNT))
+  const [draftHeroes, setDraftHeroes] = useState<Hero[]>(() => createDraft(personalHero))
   const [heroId, setHeroId] = useState<HeroId>(() => draftHeroes[0].id)
   const [encounters, setEncounters] = useState<Enemy[]>(() => createRivalEncounterRoster('las'))
   const [encounterIndex, setEncounterIndex] = useState(0)
@@ -112,7 +119,9 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
   const feedbackId = useRef(0)
   const chapterId = useRef(0)
 
-  const hero = useMemo(() => HEROES.find(item => item.id === heroId)!, [heroId])
+  const heroes = useMemo(() => personalHero ? [personalHero, ...HEROES] : HEROES, [personalHero])
+  const hero = useMemo(() => heroes.find(item => item.id === heroId) ?? heroes[0], [heroId, heroes])
+  const combatHeroId = hero.combatProfileId
   const enemy = encounters[encounterIndex] ?? encounters[0]
   const intent = useMemo<Intent>(() => {
     const kind = enemy.pattern[intentStep % enemy.pattern.length]
@@ -143,7 +152,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     later(() => setChapter(current => current?.id === id ? null : current), duration)
   }, [later])
 
-  const dealHand = useCallback((nextSequence: number, id: HeroId) => {
+  const dealHand = useCallback((nextSequence: number, id: BaseHeroId) => {
     setHand(makeHand(nextSequence, id))
     setHandDealId(value => value + 1)
     sound.deal()
@@ -193,6 +202,18 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
 
+  useEffect(() => {
+    if (phase !== 'select' || !personalHero) return
+    setDraftHeroes(current => {
+      if (current.some(candidate => candidate.id === 'personal')) {
+        return current.map(candidate => candidate.id === 'personal' ? personalHero : candidate)
+      }
+      const selected = current.find(candidate => candidate.id === heroId)
+      const others = current.filter(candidate => candidate.id !== heroId).slice(0, SELECT_CANDIDATE_COUNT - 2)
+      return [personalHero, ...(selected ? [selected] : []), ...others].slice(0, SELECT_CANDIDATE_COUNT)
+    })
+  }, [heroId, personalHero, phase])
+
   const selectHero = useCallback((id: HeroId) => {
     setHeroId(id)
     sound.select()
@@ -226,7 +247,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setMutationTechUsed(false)
     setMutationRecoveryUsed(false)
     setActiveMutationEffects(mutationEffects)
-    dealHand(startSequence, heroId)
+    dealHand(startSequence, combatHeroId)
     setUpgrades(DEFAULT_UPGRADES)
     setTotalTurns(0)
     setSignatureUses(0)
@@ -238,7 +259,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setSelectedRewardId(null)
     sound.select()
     onRunStart?.()
-  }, [dealHand, heroId, mutationEffects, onRunStart])
+  }, [combatHeroId, dealHand, heroId, mutationEffects, onRunStart])
 
   const continueRun = useCallback(() => {
     const firstEnemy = encounters[0]
@@ -266,10 +287,10 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setGetuMomentum(false)
     setMutationTechUsed(false)
     setMutationRecoveryUsed(false)
-    dealHand(startSequence, heroId)
+    dealHand(startSequence, combatHeroId)
     setPhase('battle')
     beginEncounter(nextEnemy, nextIndex + 1)
-  }, [beginEncounter, dealHand, encounters, heroId])
+  }, [beginEncounter, combatHeroId, dealHand, encounters])
 
   const resolveEnemy = useCallback((
     nextPlayerBlock: number,
@@ -314,7 +335,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
           setMessage(t('message.hurt', { n: damage }))
           sound.hurt()
           showFeedback({ target: 'hero', kind: 'hurt', value: damage, amountKey: 'feedback.playerHealth', amountPolarity: 'loss', effectKey: 'feedback.effect.hurt', labelKey: 'rating.breached' })
-          if (heroId === 'smith') setSmithFury(true)
+          if (combatHeroId === 'smith') setSmithFury(true)
         } else {
           setMessage(t('message.blocked'))
           sound.guard(true)
@@ -334,16 +355,16 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
         showFeedback({ target: 'enemy', kind: 'block', value: intent.value, amountKey: 'feedback.enemyBlock', amountPolarity: 'gain', effectKey: 'feedback.effect.enemyGuard', labelKey: 'rating.enemyGuard' })
       } else {
         setCharged(true)
-        setPlayerBlock(Math.max(heroId === 'goat' ? 3 : 0, activeMutationEffects.includes('chargeShield') ? 4 : 0))
-        if (heroId === 'kibo') {
+        setPlayerBlock(Math.max(combatHeroId === 'goat' ? 3 : 0, activeMutationEffects.includes('chargeShield') ? 4 : 0))
+        if (combatHeroId === 'kibo') {
           nextSequence = Math.min(3, nextSequence + 1)
           setSequence(nextSequence)
           if (nextSequence === 3) sound.ready()
         }
         setMessage(
-          heroId === 'goat'
+          combatHeroId === 'goat'
             ? t('message.goatCharge')
-            : heroId === 'kibo'
+            : combatHeroId === 'kibo'
               ? t('message.kiboCharge')
               : t('message.enemyCharge'),
         )
@@ -370,7 +391,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
         setImpact(null)
         setEnemyActing(false)
         setIntentStep(value => value + 1)
-        dealHand(nextSequence, heroId)
+        dealHand(nextSequence, combatHeroId)
         setPlayedCardId(null)
         setTurnMotion('idle')
         setTurnOwner('handoff')
@@ -387,7 +408,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
         }, CHAPTER_DURATION.turn)
       }, PLAYER_RESULT_HOLD)
     }, ENEMY_CHAPTER_DELAY + CHAPTER_DURATION.hostile + 220)
-  }, [activeMutationEffects, dealHand, encounterIndex, enemy.nameKey, heroId, intent, later, mutationRecoveryUsed, showChapter, showFeedback])
+  }, [activeMutationEffects, combatHeroId, dealHand, encounterIndex, enemy.nameKey, intent, later, mutationRecoveryUsed, showChapter, showFeedback])
 
   const finishEncounter = useCallback(() => {
     setImpact(null)
@@ -424,7 +445,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
         setGetuMomentum(false)
         setMutationTechUsed(false)
         setMutationRecoveryUsed(false)
-        dealHand(upgrades.startSequence, heroId)
+        dealHand(upgrades.startSequence, combatHeroId)
         beginEncounter(nextEnemy, 1)
       }, CYCLE_SEAL_DURATION)
       return
@@ -456,7 +477,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
       setPhase('reward')
       setBusy(false)
     }, CHAPTER_DURATION.archive)
-  }, [beginEncounter, dealHand, encounterIndex, encounters.length, enemy.heroId, heroId, later, onEnemyDefeated, prepareEncounter, round, showChapter, upgrades.extraHeal, upgrades.startSequence])
+  }, [beginEncounter, combatHeroId, dealHand, encounterIndex, encounters.length, enemy.heroId, heroId, later, onEnemyDefeated, prepareEncounter, round, showChapter, upgrades.extraHeal, upgrades.startSequence])
 
   const playCard = useCallback((cardId: string) => {
     if (busy || battleEntry !== 'ready' || phase !== 'battle') return
@@ -490,7 +511,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     if (card.id === 'counter') {
       block += 3 + upgrades.guard
       if (intent.kind === 'attack') damage = 5
-      if (heroId === 'john') {
+      if (combatHeroId === 'john') {
         block += 2
         damage += 2
       }
@@ -504,41 +525,41 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
       setSignatureUses(value => value + 1)
       setImpact('signature')
       sound.signature()
-      if (heroId === 'las') {
+      if (combatHeroId === 'las') {
         damage = 8
         block += 6
       }
-      if (heroId === 'isabel') {
+      if (combatHeroId === 'isabel') {
         nextPlayerHp = Math.min(MAX_HP, nextPlayerHp + 6)
         block += 8
       }
-      if (heroId === 'smith') damage = 14
-      if (heroId === 'goat') {
+      if (combatHeroId === 'smith') damage = 14
+      if (combatHeroId === 'goat') {
         damage = 9
         nextExposed += 2
       }
-      if (heroId === 'chill') {
+      if (combatHeroId === 'chill') {
         damage = 6
         block += 11
       }
-      if (heroId === 'getu') {
+      if (combatHeroId === 'getu') {
         damage = 10 + (getuMomentum ? 6 : 0)
         setGetuMomentum(false)
       }
-      if (heroId === 'kibo') {
+      if (combatHeroId === 'kibo') {
         damage = 7
         block += 7
       }
-      if (heroId === 'john') {
+      if (combatHeroId === 'john') {
         damage = 11 + (intent.kind === 'attack' ? 5 : 0)
       }
     }
 
-    if (card.kind === 'guard' && heroId === 'chill') {
+    if (card.kind === 'guard' && combatHeroId === 'chill') {
       nextPlayerHp = Math.min(MAX_HP, nextPlayerHp + 1)
     }
-    if (card.kind === 'guard' && heroId === 'getu') setGetuMomentum(true)
-    if (card.kind === 'breach' && heroId === 'getu' && getuMomentum) {
+    if (card.kind === 'guard' && combatHeroId === 'getu') setGetuMomentum(true)
+    if (card.kind === 'breach' && combatHeroId === 'getu' && getuMomentum) {
       damage += 4
       setGetuMomentum(false)
     }
@@ -555,7 +576,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
       damage += upgrades.exposeBonus
       nextExposed = Math.max(0, nextExposed - 1)
     }
-    if (heroId === 'isabel' && !isabelRecoveryUsed && nextPlayerHp > playerHp) {
+    if (combatHeroId === 'isabel' && !isabelRecoveryUsed && nextPlayerHp > playerHp) {
       block += 4
       setIsabelRecoveryUsed(true)
     }
@@ -578,11 +599,11 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
 
     let nextSequence = sequence
     if (card.kind === 'signature') {
-      nextSequence = heroId === 'kibo' ? 1 : 0
+      nextSequence = combatHeroId === 'kibo' ? 1 : 0
       setLastKind(null)
     } else {
       if (lastKind && lastKind !== card.kind) nextSequence = Math.min(3, nextSequence + 1)
-      if (heroId === 'las' && card.kind === 'tech' && !firstTechUsed) {
+      if (combatHeroId === 'las' && card.kind === 'tech' && !firstTechUsed) {
         nextSequence = Math.min(3, nextSequence + 1)
         setFirstTechUsed(true)
       }
@@ -715,7 +736,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     firstTechUsed,
     getuMomentum,
     hand,
-    heroId,
+    combatHeroId,
     intent.kind,
     isabelRecoveryUsed,
     lastKind,
@@ -771,10 +792,10 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     setFeedback(null)
     setChapter(null)
     setMessage(t('message.select'))
-    const nextDraft = sample(HEROES, SELECT_CANDIDATE_COUNT)
+    const nextDraft = createDraft(personalHero)
     setDraftHeroes(nextDraft)
     setHeroId(nextDraft[0].id)
-  }, [])
+  }, [personalHero])
 
   const restart = useCallback(() => {
     setUpgrades(DEFAULT_UPGRADES)
@@ -795,7 +816,7 @@ export function useAnomalyHand({ mutationEffects = [], onRunStart, onEnemyDefeat
     phase,
     hero,
     heroId,
-    heroes: HEROES,
+    heroes,
     draftHeroes,
     enemy,
     encounterIndex,

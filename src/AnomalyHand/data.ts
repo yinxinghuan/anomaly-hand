@@ -1,4 +1,4 @@
-import type { ActionCard, Enemy, Hero, HeroId, Reward } from './types'
+import type { ActionCard, BaseHeroId, Enemy, Hero, HeroId, Reward } from './types'
 import lasImage from './img/heroes/full/las.webp'
 import isabelImage from './img/heroes/full/isabel.webp'
 import smithImage from './img/heroes/full/smith.webp'
@@ -11,6 +11,7 @@ import johnImage from './img/heroes/full/john.webp'
 export const HEROES: Hero[] = [
   {
     id: 'las',
+    combatProfileId: 'las',
     name: 'Las isas',
     code: 'L-01 / REFRACTION',
     passiveKey: 'hero.las.passive',
@@ -20,6 +21,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'isabel',
+    combatProfileId: 'isabel',
     name: 'Isabel',
     code: 'I-03 / QUARTERMASTER',
     passiveKey: 'hero.isabel.passive',
@@ -29,6 +31,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'smith',
+    combatProfileId: 'smith',
     name: 'Smith black',
     code: 'S-07 / HARDLINE',
     passiveKey: 'hero.smith.passive',
@@ -38,6 +41,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'goat',
+    combatProfileId: 'goat',
     name: 'Goat McFisty',
     code: 'G-13 / RED PACT',
     passiveKey: 'hero.goat.passive',
@@ -47,6 +51,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'getu',
+    combatProfileId: 'getu',
     name: 'G€tü',
     code: 'G-08 / KINETIC',
     passiveKey: 'hero.getu.passive',
@@ -56,6 +61,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'chill',
+    combatProfileId: 'chill',
     name: 'Chill guy',
     code: 'C-04 / COOL HEAD',
     passiveKey: 'hero.chill.passive',
@@ -65,6 +71,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'kibo',
+    combatProfileId: 'kibo',
     name: 'KI_Bo',
     code: 'K-11 / ORACLE',
     passiveKey: 'hero.kibo.passive',
@@ -74,6 +81,7 @@ export const HEROES: Hero[] = [
   },
   {
     id: 'john',
+    combatProfileId: 'john',
     name: 'JohnCheung',
     code: 'J-09 / TRACKER',
     passiveKey: 'hero.john.passive',
@@ -114,6 +122,10 @@ export function createRivalEncounterRoster(playerId: HeroId, round = 1): Enemy[]
     maxHp: 18 + index * 2 + Math.floor(index * 0.8) + (round - 1) * 8,
     attack: 3 + Math.floor(index / 2) + (round - 1),
   }))
+}
+
+export function getCombatProfile(id: BaseHeroId): Hero {
+  return HEROES.find(hero => hero.id === id)!
 }
 
 export const REWARDS: Reward[] = [

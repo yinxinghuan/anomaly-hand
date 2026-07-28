@@ -1,10 +1,10 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Icon } from './icons'
 import { useAnomalyHand } from './useAnomalyHand'
 import { usePlayerArchiveCard } from './usePlayerArchiveCard'
 import { useArchiveLeaderboard } from './useArchiveLeaderboard'
 import { setSoundMuted } from './audio'
-import { HEROES } from './data'
+import { getCombatProfile, HEROES } from './data'
 import { openAigramProfile } from '@shared/runtime'
 import { t } from './i18n'
 import type { ActionCard, Enemy, Hero, Intent, RewardId } from './types'
@@ -123,10 +123,25 @@ function EnemyArt({ enemy, impact }: { enemy: Enemy; impact: string | null }) {
 
 export default function AnomalyHand() {
   const archive = usePlayerArchiveCard()
+  const personalHero = useMemo<Hero | undefined>(() => {
+    if (!archive.card) return undefined
+    const combatProfile = getCombatProfile(archive.card.combatProfileId)
+    return {
+      id: 'personal',
+      combatProfileId: archive.card.combatProfileId,
+      name: archive.card.displayName,
+      code: t('game.personalCode'),
+      passiveKey: combatProfile.passiveKey,
+      signatureNameKey: combatProfile.signatureNameKey,
+      signatureDescriptionKey: combatProfile.signatureDescriptionKey,
+      image: archive.card.artUrl ?? archive.card.portraitUrl ?? combatProfile.image,
+    }
+  }, [archive.card])
   const game = useAnomalyHand({
     mutationEffects: archive.mutations.map(mutation => mutation.effect),
     onRunStart: archive.arm,
     onEnemyDefeated: archive.archiveRival,
+    personalHero,
   })
   const [rulesOpen, setRulesOpen] = useState(false)
   const [muted, setMuted] = useState(false)
@@ -175,7 +190,7 @@ export default function AnomalyHand() {
             <header className="ah-select__header">
               <div className="ah-select__eyebrow">
                 <p className="ah-kicker">{t('game.fieldFile')}</p>
-                <small>01—08 / ALTERU ARCHIVE</small>
+                <small>01—{String(game.heroes.length).padStart(2, '0')} / ALTERU ARCHIVE</small>
               </div>
               <h1>{t('game.title')}</h1>
               <p>{t('game.selectSubtitle')}</p>
@@ -196,7 +211,7 @@ export default function AnomalyHand() {
                 <div className="ah-feature-card__art"><HeroArt hero={game.hero} /></div>
                 <div className="ah-feature-card__serial">
                   <span>{String(game.heroes.findIndex(hero => hero.id === game.heroId) + 1).padStart(2, '0')}</span>
-                  <i>/ 08</i>
+                  <i>/ {String(game.heroes.length).padStart(2, '0')}</i>
                 </div>
                 <div className="ah-feature-card__copy">
                   <small>{game.hero.code}</small>

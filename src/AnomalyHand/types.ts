@@ -2,10 +2,12 @@ export type Phase = 'select' | 'evolution' | 'battle' | 'reward' | 'victory' | '
 export type CardKind = 'breach' | 'guard' | 'tech' | 'signature'
 export type IntentKind = 'attack' | 'guard' | 'charge'
 
-export type HeroId = 'las' | 'isabel' | 'smith' | 'goat' | 'getu' | 'chill' | 'kibo' | 'john'
+export type BaseHeroId = 'las' | 'isabel' | 'smith' | 'goat' | 'getu' | 'chill' | 'kibo' | 'john'
+export type HeroId = BaseHeroId | 'personal'
 
 export type Hero = {
   id: HeroId
+  combatProfileId: BaseHeroId
   name: string
   code: string
   passiveKey: string
