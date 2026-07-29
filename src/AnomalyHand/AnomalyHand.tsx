@@ -40,7 +40,7 @@ const REWARD_ART: Record<RewardId, string> = {
 
 function HeroArt({ hero, compact = false, hurt = false }: { hero: Hero; compact?: boolean; hurt?: boolean }) {
   return (
-    <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'} ${hurt ? 'is-hurt' : ''}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
+    <div className={`ah-hero-art ah-hero-art--${compact ? 'compact' : 'full'} ${hero.id === 'personal' ? 'ah-hero-art--personal' : ''} ${hurt ? 'is-hurt' : ''}`} role="img" aria-label={t('game.heroAlt', { name: hero.name })}>
       <img src={hero.image} alt="" draggable={false} />
     </div>
   )
@@ -196,7 +196,7 @@ export default function AnomalyHand() {
               <p>{t('game.selectSubtitle')}</p>
               {(archive.card || archive.generating || archive.backgroundGenerating || archive.mutations.length > 0) && (
                 <aside className="ah-personal-file" aria-live="polite">
-                  {personalCardArt ? <span className="ah-personal-file__art"><img src={personalCardArt} alt="" draggable={false} /></span> : <span className="ah-personal-file__loader" aria-hidden="true" />}
+                  {personalCardArt ? <span className="ah-personal-file__art ah-personal-file__art--personal"><img src={personalCardArt} alt="" draggable={false} /></span> : <span className="ah-personal-file__loader" aria-hidden="true" />}
                   <span className="ah-personal-file__copy">
                     <small>{t(archive.card ? 'archive.fileReady' : archive.generating ? 'archive.fileDrawing' : 'archive.fileQueue')}</small>
                     <b>{archive.card ? archive.card.displayName : t(archive.generating ? 'archive.drawing' : 'archive.generating')}</b>
